@@ -4,6 +4,9 @@ import org.example.transactionmonitoringbackend.entity.Transaction;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
+import java.util.List;
+
 @Repository
 public class TransactionRepository {
 
@@ -26,4 +29,49 @@ public class TransactionRepository {
         );
     }
 
+    // GET ALL
+    public List<Transaction> getAllTransactions() {
+        String sql = "SELECT * FROM transactions";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Transaction transaction = new Transaction();
+            transaction.setId(rs.getLong("id"));
+            transaction.setAccountId(rs.getString("account_id"));
+            transaction.setPayeeId(rs.getString("payee_id"));
+            transaction.setAmount(rs.getBigDecimal("amount"));
+            transaction.setCurrency(rs.getString("currency"));
+            transaction.setTransType(rs.getString("trans_type"));
+            transaction.setTransTimestamp(rs.getTimestamp("trans_timestamp").toLocalDateTime());
+            transaction.setDescription(rs.getString("description"));
+
+            Timestamp createdAt = rs.getTimestamp("created_at");
+            if (createdAt != null) {
+                transaction.setCreatedAt(createdAt.toLocalDateTime());
+            }
+
+            return transaction;
+        });
+    }
+
+    // GET BY ID
+    public Transaction getTransactionById(Long id) {
+        String sql = "SELECT * FROM transactions WHERE id = ?";
+        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+            Transaction transaction = new Transaction();
+            transaction.setId(rs.getLong("id"));
+            transaction.setAccountId(rs.getString("account_id"));
+            transaction.setPayeeId(rs.getString("payee_id"));
+            transaction.setAmount(rs.getBigDecimal("amount"));
+            transaction.setCurrency(rs.getString("currency"));
+            transaction.setTransType(rs.getString("trans_type"));
+            transaction.setTransTimestamp(rs.getTimestamp("trans_timestamp").toLocalDateTime());
+            transaction.setDescription(rs.getString("description"));
+
+            Timestamp createdAt = rs.getTimestamp("created_at");
+            if (createdAt != null) {
+                transaction.setCreatedAt(createdAt.toLocalDateTime());
+            }
+
+            return transaction;
+        }, id);
+    }
 }

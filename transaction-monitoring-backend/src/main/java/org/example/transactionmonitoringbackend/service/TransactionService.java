@@ -5,6 +5,8 @@ import org.example.transactionmonitoringbackend.repository.TransactionRepository
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class TransactionService {
     @Autowired
@@ -14,4 +16,11 @@ public class TransactionService {
         return transactionRepository.addTransaction(transaction);
     }
 
+    public List<Transaction> getAllTransactions() {
+        return transactionRepository.getAllTransactions();
+    }
+
+    public Transaction getTransactionById(Long id) {
+        return transactionRepository.getTransactionById(id);
+    }
 }

@@ -57,6 +57,8 @@ public class Transaction {
         this.description = description;
         this.createdAt = createdAt;
     }
+    public Transaction() {
+    }
 
     public Long getId() {
         return id;
