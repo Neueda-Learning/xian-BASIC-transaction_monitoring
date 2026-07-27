@@ -1,0 +1,41 @@
+1.transactions Table:
+	This table stores every transaction, and all rule calculations rely on the data in this table.
+
+2.Field Design: field name, type, description, constraints/index
+
+	id, BIGINT, Transaction unique primary key, PK;
+	account_id, VARCHAR(64), Payment Account ID, Ordinary Index;
+	payee_id, VARCHAR(64), Payee ID, Composite Index(account_id, payee_id);
+	amount, DECIMAL(18,2), Transaction amount;
+	currency, VARCHAR(3), Currency, default'USD';
+	trans_type, VARCHAR(20), DEBIT/CREDIT;
+	trans_timestamp, TIMESTAMP, Transaction timestamp, Composite Index(account_id, trans_timestamp);
+	description, TEXT, Description;
+	created_at, TTIMESTAMP, Record the entry time, Default current UTC;
+
+3.Index Description
+	idx_account_time(account_id, trans_timestamp):daily quota quick statistics.
+	idx-account-payee(account_id, payee_id): Quickly check if hte account of therecipient exists.
+
+4.Adaptaion rules
+	4.1 Amount threshold: Directly read the amount of a single transaction.
+	4.2 Rate rule: by account+time window count.
+	4.3 Daily limit: SUM(account) by account data.
+	4.4 New payee: Validate the Known_payees table.
+
+5. Creation Statement
+
+CREATE TABLE `transactions` (
+  `id` BIGINT NOT NULL,
+  `account_id` VARCHAR(64) NOT NULL,
+  `payee_id` VARCHAR(64) NOT NULL,
+  `amount` DECIMAL(18,2) NOT NULL,
+  `currency` VARCHAR(3) NOT NULL DEFAULT 'USD',
+  `trans_type` VARCHAR(20) NOT NULL,
+  `trans_timestamp` TIMESTAMP NOT NULL,
+  `description` TEXT,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_account_time` (`account_id`, `trans_timestamp`),
+  KEY `idx_account_payee` (`account_id`, `payee_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
