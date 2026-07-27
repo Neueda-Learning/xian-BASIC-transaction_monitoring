@@ -1,0 +1,16 @@
+1. Database Overall Design Principles:
+	1.1 Agile Development: Initially, only core fields are retained.
+	1.2 Time Consistency: UTC is the standard.
+	1.3 Index Optimization
+	1.4 Complete Audit Chain: All changes must be fully documented.
+	1.5 Rule Tables: The rule table needs to be adapted to four basic rules first.
+	1.6 Single User: No User Table
+
+	##Database Creation: create database tmDb
+
+2. Data Table List:
+	2.1 Transaction Master Table: transactions
+	2.2 Monitoring Configuration Table: monitor_rules
+	2.3 Alert Master Table: alerts
+	2.4 Alert Status Change Table:alerts_status_history
+	2.5 Account Payees: known_payees
