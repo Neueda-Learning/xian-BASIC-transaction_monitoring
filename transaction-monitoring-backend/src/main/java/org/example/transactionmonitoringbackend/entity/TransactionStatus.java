@@ -1,0 +1,7 @@
+package org.example.transactionmonitoringbackend.entity;
+
+public enum TransactionStatus {
+    PENDING,
+    COMPLETED,
+    FAILED
+}
