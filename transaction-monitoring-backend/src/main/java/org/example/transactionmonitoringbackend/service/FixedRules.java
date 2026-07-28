@@ -2,6 +2,7 @@ package org.example.transactionmonitoringbackend.service;
 
 import org.example.transactionmonitoringbackend.entity.Transaction;
 import org.example.transactionmonitoringbackend.repository.TransactionRepository;
+import org.example.transactionmonitoringbackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,9 +23,11 @@ public class FixedRules {
     private static final int MAX_DESCRIPTION_LENGTH = 255;
 
     private final TransactionRepository transactionRepository;
+    private final UserService userService;
 
-    public FixedRules(TransactionRepository transactionRepository) {
+    public FixedRules(TransactionRepository transactionRepository, UserService userService) {
         this.transactionRepository = transactionRepository;
+        this.userService = userService;
     }
 
     private Instant toInstantOrNow(Object transactionTime){
@@ -68,6 +71,15 @@ public class FixedRules {
     }
 
     //rule 3: first transaction to a payee for the same account.
+    public int checkFirstTransactionToPayee(Transaction transaction) {
+        // Simple rule: if payee is not found in users table, return 3 (warning), else 0.
+        String payeeId = transaction.getPayeeId();
+        if (payeeId == null || payeeId.isBlank() || !userService.userExists(payeeId)) {
+            System.out.println("PAYEE_NOT_FOUND");
+            return 3;
+        }
+        return 0;
+    }
 
 
     //rule 4: UTC day bucket cumulative amount check.
