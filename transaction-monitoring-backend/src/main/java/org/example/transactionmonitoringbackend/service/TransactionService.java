@@ -43,7 +43,7 @@ public class TransactionService {
             System.out.println("rule3 alert");
             Alert alert3 = new Alert();
             alert3.setTransactionId(transaction.getId());
-            alert3.setRuleId(2L);
+            alert3.setRuleId(3L);
             alertService.createAlert(alert3);
         }
         if(rule4 == 4){
