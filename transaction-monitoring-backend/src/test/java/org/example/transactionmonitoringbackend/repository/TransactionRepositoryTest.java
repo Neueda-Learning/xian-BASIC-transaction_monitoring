@@ -1,9 +1,7 @@
 package org.example.transactionmonitoringbackend.repository;
 
-import org.aspectj.lang.annotation.Before;
 import org.example.transactionmonitoringbackend.entity.Transaction;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -34,4 +32,20 @@ public class TransactionRepositoryTest {
         assertEquals(1, actual);
     }
 
+    @Test
+    void getAllTransactions_test() {
+        List<Transaction> listBefore = repository.getAllTransactions();
+        jdbcTemplate.update(
+                "INSERT INTO transactions(account_id, payee_id, amount, currency, trans_type, trans_timestamp, description) VALUES (?,?,?,?,?,?,?)",
+                "106", "107", new BigDecimal("120.00"), "USD", "DEBIT",
+                LocalDateTime.of(2026, 7, 28, 11, 0, 0), "seed-1"
+        );
+        jdbcTemplate.update(
+                "INSERT INTO transactions(account_id, payee_id, amount, currency, trans_type, trans_timestamp, description) VALUES (?,?,?,?,?,?,?)",
+                "107", "106", new BigDecimal("80.20"), "USD", "CREDIT",
+                LocalDateTime.of(2026, 7, 28, 11, 5, 0), "seed-2"
+        );
+        List<Transaction> list = repository.getAllTransactions();
+        assertEquals(listBefore.size() + 2, list.size());
+    }
 }
