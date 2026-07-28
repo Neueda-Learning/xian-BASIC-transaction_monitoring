@@ -72,22 +72,13 @@ public class FixedRules {
 
     //rule 3: first transaction to a payee for the same account.
     public int checkFirstTransactionToPayee(Transaction transaction) {
-        // First verify the payee exists in the users table (compare payeeId with account_id)
+        // Simple rule: if payee is not found in users table, return 3 (warning), else 0.
         String payeeId = transaction.getPayeeId();
         if (payeeId == null || payeeId.isBlank() || !userService.userExists(payeeId)) {
-            // Payee not found: return distinct warning code (5) so callers
-            // can differentiate from "first transaction to payee" (3).
             System.out.println("PAYEE_NOT_FOUND");
-            return 5;
-        }
-
-        long count = transactionRepository.countByAccountIdAndPayeeId(transaction.getAccountId(), transaction.getPayeeId());
-        if (count == 0) {
-            System.out.println("FIRST_TRANSACTION_TO_PAYEE");
             return 3;
-        } else {
-            return 0;
         }
+        return 0;
     }
 
 

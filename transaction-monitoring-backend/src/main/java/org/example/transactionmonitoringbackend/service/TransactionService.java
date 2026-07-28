@@ -20,20 +20,12 @@ public class TransactionService {
         int rule3 = fixedRules.checkFirstTransactionToPayee(transaction);
         int rule4 = fixedRules.dailyLimit(transaction);
 
-        // If rule3 returns 5 it means the payee was not found in users table.
+        // If rule3 returns 3 it means the payee was not found in users table.
         // We treat this as a warning and do not persist the transaction.
-        if (rule3 == 5) {
+        if (rule3 == 3) {
             System.out.println("warning: payee not found, aborting insert");
             return -1;
         }
-
-        System.out.println("rule1:" +rule1);
-
-        return transactionRepository.addTransaction(transaction);
-
-    }
-
-
     public List<Transaction> getAllTransactions() {
         return transactionRepository.getAllTransactions();
     }

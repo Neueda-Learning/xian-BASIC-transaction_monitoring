@@ -112,4 +112,10 @@ public class TransactionRepository {
         return sum == null ? BigDecimal.ZERO : sum;
     }
 
+    public long countByAccountIdAndPayeeId(String accountId, String payeeId) {
+        String sql = "SELECT COUNT(*) FROM transactions WHERE account_id = ? AND payee_id = ?";
+        Long count = jdbcTemplate.queryForObject(sql, Long.class, accountId, payeeId);
+        return count == null ? 0L : count;
+    }
+
 }
