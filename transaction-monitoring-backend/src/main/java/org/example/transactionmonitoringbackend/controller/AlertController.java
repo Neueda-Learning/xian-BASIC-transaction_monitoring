@@ -44,4 +44,10 @@ public class AlertController {
         return ResponseEntity.ok(updateALert);
     }
 
+    // find all open alert
+    @GetMapping("/open")
+    public List<Alert> getOpenAlerts() {
+        return alertService.getOpenAlerts();
+    }
+
 }

@@ -42,5 +42,11 @@ public class AlertService {
         return alertRepository.save(alert);
     }
 
+    //get open alert
+    public List<Alert> getOpenAlerts(){
+
+        return alertRepository.findByStatus(AlertStatus.OPEN);
+    }
+
 
 }

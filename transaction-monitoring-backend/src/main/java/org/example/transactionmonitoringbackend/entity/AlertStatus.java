@@ -6,5 +6,4 @@ public enum AlertStatus {
     INVESTIGATING, // Alert is under investigation
     CLOSED, // Investigation complete, resolved or confirmed legitimate
     DISMISSED // Alert has been dismissed without action
-
 }
