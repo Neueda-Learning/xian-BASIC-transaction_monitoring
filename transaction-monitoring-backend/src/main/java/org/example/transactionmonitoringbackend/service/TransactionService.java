@@ -11,10 +11,20 @@ import java.util.List;
 public class TransactionService {
     @Autowired
     private TransactionRepository transactionRepository;
+    @Autowired
+    private FixedRules fixedRules;
 
     public int addTransaction(Transaction transaction){
+        int rule1 = fixedRules.checkSingleTransaction(transaction);
+        int rule2 = fixedRules.checkWindow(transaction);
+        int rule4 = fixedRules.dailyLimit(transaction);
+
+        System.out.println("rule1:" +rule1);
+
         return transactionRepository.addTransaction(transaction);
+
     }
+
 
     public List<Transaction> getAllTransactions() {
         return transactionRepository.getAllTransactions();

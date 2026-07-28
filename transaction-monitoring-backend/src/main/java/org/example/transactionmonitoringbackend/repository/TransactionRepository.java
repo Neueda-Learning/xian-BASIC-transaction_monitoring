@@ -4,6 +4,7 @@ import org.example.transactionmonitoringbackend.entity.Transaction;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
@@ -92,4 +93,23 @@ public class TransactionRepository {
         );
         return count == null ? 0L : count;
     }
+
+    public BigDecimal sumAmountByAccountIdAndTransactionTimeBetween(String accountId, Instant startTime, Instant endTime){
+        String sql = """
+                    select coalesce(sum(amount), 0)
+                    from transactions
+                    where account_id = ?
+                        and trans_timestamp >= ?
+                        and trans_timestamp < ?
+                """;
+        BigDecimal sum = jdbcTemplate.queryForObject(
+                sql,
+                BigDecimal.class,
+                accountId,
+                Timestamp.from(startTime),
+                Timestamp.from(endTime)
+        );
+        return sum == null ? BigDecimal.ZERO : sum;
+    }
+
 }
