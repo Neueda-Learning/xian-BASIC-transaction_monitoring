@@ -42,4 +42,32 @@ public class RulesTest {
         assertEquals(1, result);
     }
 
+    @Test
+    void checkWindow_trigger_test() {
+        LocalDateTime txTime = LocalDateTime.of(2026, 7, 28, 12, 0, 0);
+
+        // 在10分钟窗口内先插入5笔同账户交易；当前这笔会让 recentCount+1 > 5
+        for (int i = 0; i < 5; i++) {
+            jdbcTemplate.update(
+                    "INSERT INTO transactions(account_id, payee_id, amount, currency, trans_type, trans_timestamp, description) VALUES (?,?,?,?,?,?,?)",
+                    "ACC_RULES_002",
+                    "PAYEE_RULES_002",
+                    new BigDecimal("10.00"),
+                    "USD",
+                    "DEBIT",
+                    txTime.minusMinutes(1).minusSeconds(i),
+                    "window-" + i
+            );
+        }
+
+        Transaction tx = baseTx();
+        tx.setAccountId("ACC_RULES_002");
+        tx.setPayeeId("PAYEE_RULES_002");
+        tx.setTransTimestamp(txTime.minusHours(8));
+
+        int result = fixedRules.checkWindow(tx);
+
+        assertEquals(2, result);
+    }
+
 }
