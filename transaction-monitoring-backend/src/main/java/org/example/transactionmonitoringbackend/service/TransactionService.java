@@ -2,8 +2,6 @@ package org.example.transactionmonitoringbackend.service;
 
 import org.example.transactionmonitoringbackend.entity.Transaction;
 import org.example.transactionmonitoringbackend.repository.TransactionRepository;
-import org.example.transactionmonitoringbackend.service.MonitoringRuleService;
-import org.example.transactionmonitoringbackend.service.FixedRule3;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,27 +11,23 @@ import java.util.List;
 public class TransactionService {
     @Autowired
     private TransactionRepository transactionRepository;
-
     @Autowired
-    private MonitoringRuleService monitoringRuleService;
+    private FixedRules fixedRules;
 
-    @Autowired
-    private FixedRule3 fixedRule3;
-
-    /**
-     * Add a transaction while running simple monitoring rules.
-     * If a monitoring rule detects an issue (e.g., missing payee),
-     * we return -1 to indicate a warning and do not persist the transaction.
-     */
     public int addTransaction(Transaction transaction){
-        // run fixed rule 3: payee existence check
-        int rule3 = fixedRule3.checkPayeeExistence(transaction);
-        if (rule3 == 3) {
-            // payee not found -> warning, do not persist
+        int rule1 = fixedRules.checkSingleTransaction(transaction);
+        int rule2 = fixedRules.checkWindow(transaction);
+        int rule3 = fixedRules.checkFirstTransactionToPayee(transaction);
+        int rule4 = fixedRules.dailyLimit(transaction);
+
+        // If rule3 returns 5 it means the payee was not found in users table.
+        // We treat this as a warning and do not persist the transaction.
+        if (rule3 == 5) {
+            System.out.println("warning: payee not found, aborting insert");
             return -1;
         }
 
-        // Other rules can be executed here (amount threshold, velocity, etc.)
+        System.out.println("rule1:" +rule1);
 
         return transactionRepository.addTransaction(transaction);
 

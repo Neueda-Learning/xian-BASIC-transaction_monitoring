@@ -2,6 +2,7 @@ package org.example.transactionmonitoringbackend.service;
 
 import org.example.transactionmonitoringbackend.entity.Transaction;
 import org.example.transactionmonitoringbackend.repository.TransactionRepository;
+import org.example.transactionmonitoringbackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,9 +23,11 @@ public class FixedRules {
     private static final int MAX_DESCRIPTION_LENGTH = 255;
 
     private final TransactionRepository transactionRepository;
+    private final UserService userService;
 
-    public FixedRules(TransactionRepository transactionRepository) {
+    public FixedRules(TransactionRepository transactionRepository, UserService userService) {
         this.transactionRepository = transactionRepository;
+        this.userService = userService;
     }
 
     private Instant toInstantOrNow(Object transactionTime){
@@ -69,6 +72,15 @@ public class FixedRules {
 
     //rule 3: first transaction to a payee for the same account.
     public int checkFirstTransactionToPayee(Transaction transaction) {
+        // First verify the payee exists in the users table (compare payeeId with account_id)
+        String payeeId = transaction.getPayeeId();
+        if (payeeId == null || payeeId.isBlank() || !userService.userExists(payeeId)) {
+            // Payee not found: return distinct warning code (5) so callers
+            // can differentiate from "first transaction to payee" (3).
+            System.out.println("PAYEE_NOT_FOUND");
+            return 5;
+        }
+
         long count = transactionRepository.countByAccountIdAndPayeeId(transaction.getAccountId(), transaction.getPayeeId());
         if (count == 0) {
             System.out.println("FIRST_TRANSACTION_TO_PAYEE");
