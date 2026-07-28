@@ -17,4 +17,15 @@ Rule behavior (in MonitoringRuleService):
 - `checkPayeeExistence(Transaction transaction)`: reads `payeeId` from the transaction, queries the `users` table via `UserService`.
 - If the payee is missing, the rule returns a warning code and the transaction should not be persisted.
 
-English comments are present in `MonitoringRuleService` where this rule is implemented.
+
+CREATE TABLE IF NOT EXISTS users (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255),
+  account_id VARCHAR(64) NOT NULL UNIQUE
+);
+
+-- Insert test users for local development and testing
+INSERT INTO users (name, account_id) VALUES
+  ('Alice Example','A123'),
+  ('Bob Example','B456'),
+  ('Charlie Example','C789');
