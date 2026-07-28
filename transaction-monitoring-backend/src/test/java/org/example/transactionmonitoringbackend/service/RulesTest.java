@@ -70,4 +70,14 @@ public class RulesTest {
         assertEquals(2, result);
     }
 
+    @Test
+    void checkFirstTransactionToPayee_trigger_test() {
+        Transaction tx = baseTx();
+        tx.setPayeeId("   "); // blank 会直接触发 rule3
+
+        int result = fixedRules.checkFirstTransactionToPayee(tx);
+
+        assertEquals(3, result);
+    }
+
 }
