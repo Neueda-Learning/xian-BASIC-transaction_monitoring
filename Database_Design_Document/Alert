@@ -1,0 +1,10 @@
+CREATE TABLE `alerts` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `transaction_id` BIGINT NOT NULL,
+  `rule_id` BIGINT NOT NULL,
+  `status` VARCHAR(20) NOT NULL DEFAULT 'OPEN',
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_transaction_id` (`transaction_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
