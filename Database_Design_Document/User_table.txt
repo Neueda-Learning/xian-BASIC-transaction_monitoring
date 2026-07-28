@@ -1,0 +1,20 @@
+User table
+
+Fields:
+- name: full name of the user (VARCHAR(255))
+- account_id: unique account identifier used in transactions (VARCHAR(64), NOT NULL, UNIQUE)
+
+Purpose:
+The `users` table stores basic user information required for transaction processing.
+When a transfer is initiated, the system reads `payee_id` from the `transactions` table (this maps to `account_id` in `users`).
+The monitoring rules will query this table to verify that the payee exists before allowing or recording a transfer.
+
+Implementation notes:
+- Create table SQL is provided at `transaction-monitoring-backend/src/main/resources/db/create_users_table.sql`.
+- Sample test rows are included in that SQL file for local testing (Alice/Bob/Charlie).
+
+Rule behavior (in MonitoringRuleService):
+- `checkPayeeExistence(Transaction transaction)`: reads `payeeId` from the transaction, queries the `users` table via `UserService`.
+- If the payee is missing, the rule returns a warning code and the transaction should not be persisted.
+
+English comments are present in `MonitoringRuleService` where this rule is implemented.

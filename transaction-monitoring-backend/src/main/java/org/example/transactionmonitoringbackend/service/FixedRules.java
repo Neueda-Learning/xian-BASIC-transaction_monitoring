@@ -1,9 +1,8 @@
 package org.example.transactionmonitoringbackend.service;
 
-import org.example.transactionmonitoringbackend.entity.MonitoringRule;
 import org.example.transactionmonitoringbackend.entity.Transaction;
-import org.example.transactionmonitoringbackend.repository.MonitoringRuleRepository;
 import org.example.transactionmonitoringbackend.repository.TransactionRepository;
+import org.example.transactionmonitoringbackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,11 +11,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
-public class MonitoringRuleService {
+public class FixedRules {
+
     //Fixed demo thresholds from the training document.
     private static final BigDecimal FIXED_AMOUNT_THRESHOLD = new BigDecimal("10000");
     private static final BigDecimal FIXED_DAILY_LIMIT = new BigDecimal("50000");
@@ -25,37 +23,11 @@ public class MonitoringRuleService {
     private static final int MAX_DESCRIPTION_LENGTH = 255;
 
     private final TransactionRepository transactionRepository;
+    private final UserService userService;
 
-    private final MonitoringRuleRepository monitoringRuleRepository;
-
-
-    public MonitoringRuleService(TransactionRepository transactionRepository, MonitoringRuleRepository monitoringRuleRepository) {
+    public FixedRules(TransactionRepository transactionRepository, UserService userService) {
         this.transactionRepository = transactionRepository;
-        this.monitoringRuleRepository = monitoringRuleRepository;
-    }
-
-    public int addRule(MonitoringRule rule) {
-        return monitoringRuleRepository.addRule(rule);
-    }
-
-    public List<MonitoringRule> getAllRules() {
-        return monitoringRuleRepository.getAllRules();
-    }
-
-    public MonitoringRule getRuleById(Long id) {
-        return monitoringRuleRepository.getRuleById(id);
-    }
-
-    public List<MonitoringRule> getActiveRules() {
-        return monitoringRuleRepository.getActiveRules();
-    }
-
-    public int updateRule(MonitoringRule rule) {
-        return monitoringRuleRepository.updateRule(rule);
-    }
-
-    public int deleteRule(Long id) {
-        return monitoringRuleRepository.deleteRule(id);
+        this.userService = userService;
     }
 
     private Instant toInstantOrNow(Object transactionTime){
@@ -91,25 +63,25 @@ public class MonitoringRuleService {
         );
         //4.Comparison with threshold
         if (recentCount + 1 > FIXED_VELOCITY_COUNT_THRESHOLD) {
-           System.out.println("VELOCITY_RULE");
-           return 2;
+            System.out.println("VELOCITY_RULE");
+            return 2;
         }else{
             return 0;
         }
     }
 
-
     //rule 3: first transaction to a payee for the same account.
     public int checkFirstTransactionToPayee(Transaction transaction) {
-        long count = transactionRepository.countByAccountIdAndPayeeId(transaction.getAccountId(), transaction.getPayeeId());
-        if (count == 0) {
-            System.out.println("FIRST_TRANSACTION_TO_PAYEE");
+        // Simple rule: if payee is not found in users table, return 3 (warning), else 0.
+        String payeeId = transaction.getPayeeId();
+        if (payeeId == null || payeeId.isBlank() || !userService.userExists(payeeId)) {
+            System.out.println("PAYEE_NOT_FOUND");
             return 3;
-        } else {
-            return 0;
         }
+        return 0;
     }
-    
+
+
     //rule 4: UTC day bucket cumulative amount check.
     public int dailyLimit(Transaction transaction){
         Instant txTime = toInstantOrNow(transaction.getTransTimestamp());
@@ -129,35 +101,4 @@ public class MonitoringRuleService {
             return 0;
         }
     }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
