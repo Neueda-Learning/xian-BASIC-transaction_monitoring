@@ -68,6 +68,15 @@ public class FixedRules {
     }
 
     //rule 3: first transaction to a payee for the same account.
+    public int checkFirstTransactionToPayee(Transaction transaction) {
+        long count = transactionRepository.countByAccountIdAndPayeeId(transaction.getAccountId(), transaction.getPayeeId());
+        if (count == 0) {
+            System.out.println("FIRST_TRANSACTION_TO_PAYEE");
+            return 3;
+        } else {
+            return 0;
+        }
+    }
 
 
     //rule 4: UTC day bucket cumulative amount check.
