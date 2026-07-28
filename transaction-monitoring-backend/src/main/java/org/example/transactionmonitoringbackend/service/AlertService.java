@@ -50,3 +50,10 @@ public class AlertService {
 
 
 }
+
+
+//Alert alert = new Alert();
+//        alert.setTransactionId(transaction.getId());
+//        alert.setRuleId(rule.getId());
+//        alertService.createAlert(alert);
+
