@@ -35,13 +35,25 @@ public class AlertService {
     }
 
     //update alert status
-    public Alert updateAlertStatus(Long id, AlertStatus newStatus){
+//    public Alert updateAlertStatus(Long id, AlertStatus newStatus){
+//        Alert alert = alertRepository.findById(id).orElseThrow(() ->
+//                new RuntimeException("Alert not found"));
+//        alert.setStatus(newStatus);
+//        return alertRepository.save(alert);
+//    }
+    public Alert updateAlertStatus(Long id, AlertStatus newStatus) {
         Alert alert = alertRepository.findById(id).orElseThrow(() ->
                 new RuntimeException("Alert not found"));
+        AlertStatus currentStatus = alert.getStatus();
+        if (!currentStatus.isValidTransition(newStatus)) {
+            throw new IllegalArgumentException(
+                    String.format("invalid switch : %s to %s", currentStatus, newStatus)
+            );
+
+        }
         alert.setStatus(newStatus);
         return alertRepository.save(alert);
     }
-
     //get open alert
     public List<Alert> getOpenAlerts(){
 
