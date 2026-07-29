@@ -106,4 +106,32 @@ public class AlertServiceTest {
         }
 
     }
+
+    @Test
+    void updateAlertStatus_invalidTransition_test() {
+        Alert alert = new Alert();
+        alert.setTransactionId(9031L);
+        alert.setRuleId(1L);
+        alert.setStatus(AlertStatus.OPEN);
+        Alert saved = alertService.createAlert(alert);
+
+        Exception exception = null;
+        try {
+            alertService.updateAlertStatus(saved.getId(), AlertStatus.CLOSED);
+        } catch (IllegalArgumentException e) {
+            exception = e;
+        }
+        assertNotNull(exception);
+    }
+
+    @Test
+    void updateAlertStatus_notFound_test() {
+        Exception exception = null;
+        try {
+            alertService.updateAlertStatus(999999L, AlertStatus.ACKNOWLEDGED);
+        } catch (RuntimeException e) {
+            exception = e;
+        }
+        assertNotNull(exception);
+    }
 }
