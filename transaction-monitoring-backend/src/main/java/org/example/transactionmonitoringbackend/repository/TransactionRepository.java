@@ -1,16 +1,20 @@
 package org.example.transactionmonitoringbackend.repository;
 
 import org.example.transactionmonitoringbackend.entity.Transaction;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 
 @Repository
-public class TransactionRepository {
+public class TransactionRepository  {
 
     private  final JdbcTemplate jdbcTemplate;
     public TransactionRepository(JdbcTemplate jdbcTemplate) {
@@ -19,7 +23,7 @@ public class TransactionRepository {
 
     //POST
     public int addTransaction(Transaction transaction){
-        String sql = "INSERT INTO transactions (account_id, payee_id, amount, currency, trans_type, trans_timestamp, description) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO transactions (account_id, payee_id, amount, currency, trans_type, trans_timestamp, description, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         return jdbcTemplate.update(sql,
                 transaction.getAccountId(),
                 transaction.getPayeeId(),
@@ -27,7 +31,8 @@ public class TransactionRepository {
                 transaction.getCurrency(),
                 transaction.getTransType(),
                 transaction.getTransTimestamp(),
-                transaction.getDescription()
+                transaction.getDescription(),
+                transaction.getStatus()
         );
     }
 
@@ -44,7 +49,7 @@ public class TransactionRepository {
             transaction.setTransType(rs.getString("trans_type"));
             transaction.setTransTimestamp(rs.getTimestamp("trans_timestamp").toLocalDateTime());
             transaction.setDescription(rs.getString("description"));
-
+            transaction.setStatus(rs.getString("status"));
             Timestamp createdAt = rs.getTimestamp("created_at");
             if (createdAt != null) {
                 transaction.setCreatedAt(createdAt.toLocalDateTime());
@@ -67,7 +72,7 @@ public class TransactionRepository {
             transaction.setTransType(rs.getString("trans_type"));
             transaction.setTransTimestamp(rs.getTimestamp("trans_timestamp").toLocalDateTime());
             transaction.setDescription(rs.getString("description"));
-
+            transaction.setStatus(rs.getString("status"));
             Timestamp createdAt = rs.getTimestamp("created_at");
             if (createdAt != null) {
                 transaction.setCreatedAt(createdAt.toLocalDateTime());
@@ -117,5 +122,28 @@ public class TransactionRepository {
         Long count = jdbcTemplate.queryForObject(sql, Long.class, accountId, payeeId);
         return count == null ? 0L : count;
     }
+
+    //add and get id
+    public Transaction save(Transaction transaction){
+        String sql = "INSERT INTO transactions (" +
+                "account_id, payee_id,amount, currency, trans_type, trans_timestamp, description, status" +
+                ") VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection ->{
+            PreparedStatement ps = connection.prepareStatement(sql, new String[]{"id"});
+            ps.setString(1, transaction.getAccountId());
+            ps.setString(2, transaction.getPayeeId());
+            ps.setBigDecimal(3, transaction.getAmount());
+            ps.setString(4, transaction.getCurrency());
+            ps.setString(5, transaction.getTransType());
+            ps.setTimestamp(6, Timestamp.valueOf(transaction.getTransTimestamp()));
+            ps.setString(7, transaction.getDescription());
+            ps.setString(8, transaction.getStatus());
+            return ps;
+        }, keyHolder);
+        transaction.setId(keyHolder.getKey().longValue());
+        return transaction;
+    }
+
 
 }

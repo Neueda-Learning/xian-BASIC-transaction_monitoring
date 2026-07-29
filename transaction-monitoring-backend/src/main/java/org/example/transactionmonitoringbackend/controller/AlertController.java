@@ -35,14 +35,32 @@ public class AlertController {
     }
 
     //update status
+//    @PutMapping("/{id}/status")
+//    public  ResponseEntity<Alert>  updateAlertStatus(
+//            @PathVariable Long id,
+//            @RequestParam AlertStatus status
+//    ){
+//        Alert updateALert = alertService.updateAlertStatus(id, status);
+//        return ResponseEntity.ok(updateALert);
+//    }
     @PutMapping("/{id}/status")
-    public  ResponseEntity<Alert>  updateAlertStatus(
+    public  ResponseEntity<?>  updateAlertStatus(
             @PathVariable Long id,
             @RequestParam AlertStatus status
-    ){
-        Alert updateALert = alertService.updateAlertStatus(id, status);
-        return ResponseEntity.ok(updateALert);
+    ) {
+        try {
+            Alert updatedAlert = alertService.updateAlertStatus(id, status);
+            return ResponseEntity.ok(updatedAlert);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        }
     }
+
+
+
+
 
     // find all open alert
     @GetMapping("/open")
