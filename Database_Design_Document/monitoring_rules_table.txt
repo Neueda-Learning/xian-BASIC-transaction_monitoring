@@ -24,14 +24,15 @@ CREATE TABLE `monitoring_rules` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 4.recommended seed data
-INSERT INTO monitoring_rules(rule_type, is_active, threshold_amount)
-VALUES ('AMOUNT_THRESHOLD', 1, 10000.00);
 
-INSERT INTO monitoring_rules(rule_type, is_active, max_count, time_window_minutes)
-VALUES ('VELOCITY_RULE', 1, 5, 10);
+INSERT INTO monitoring_rules(rule_type,is_active,threshold_amount) VALUES ('AMOUNT_THRESHOLD',1,10000.00)
+  ON DUPLICATE KEY UPDATE is_active=VALUES(is_active),threshold_amount=VALUES(threshold_amount);
 
-INSERT INTO monitoring_rules(rule_type, is_active)
-VALUES ('NEW_PAYEE_RULE', 1);
+INSERT INTO monitoring_rules(rule_type,is_active,max_count,time_window_minutes) VALUES ('VELOCITY_RULE',1,5,10)
+  ON DUPLICATE KEY UPDATE is_active=VALUES(is_active),max_count=VALUES(max_count),time_window_minutes=VALUES(time_window_minutes);
 
-INSERT INTO monitoring_rules(rule_type, is_active, daily_limit_amount)
-VALUES ('DAILY_LIMIT_RULE', 1, 50000.00);
+INSERT INTO monitoring_rules(rule_type,is_active) VALUES ('NEW_PAYEE_RULE',1)
+  ON DUPLICATE KEY UPDATE is_active=VALUES(is_active);
+
+INSERT INTO monitoring_rules(rule_type,is_active,daily_limit_amount) VALUES ('DAILY_LIMIT_RULE',1,50000.00)
+  ON DUPLICATE KEY UPDATE is_active=VALUES(is_active),daily_limit_amount=VALUES(daily_limit_amount);
