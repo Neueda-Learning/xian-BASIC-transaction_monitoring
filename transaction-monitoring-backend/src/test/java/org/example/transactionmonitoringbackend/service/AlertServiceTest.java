@@ -11,8 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
@@ -83,5 +82,28 @@ public class AlertServiceTest {
         Alert updated = alertService.updateAlertStatus(saved.getId(), AlertStatus.ACKNOWLEDGED);
 
         assertEquals(AlertStatus.ACKNOWLEDGED, updated.getStatus());
+    }
+
+    @Test
+    void getOpenAlerts_test() {
+        Alert open = new Alert();
+        open.setTransactionId(9050L);
+        open.setRuleId(1L);
+        open.setStatus(AlertStatus.OPEN);
+        alertService.createAlert(open);
+
+        Alert closed = new Alert();
+        closed.setTransactionId(9051L);
+        closed.setRuleId(2L);
+        closed.setStatus(AlertStatus.CLOSED);
+        alertService.createAlert(closed);
+
+        List<Alert> openAlerts = alertService.getOpenAlerts();
+
+        for (Alert a : openAlerts) {
+            assertTrue(a.getStatus() == AlertStatus.OPEN);
+            assertTrue(a.getTransactionId().equals(9050L) );
+        }
+
     }
 }
