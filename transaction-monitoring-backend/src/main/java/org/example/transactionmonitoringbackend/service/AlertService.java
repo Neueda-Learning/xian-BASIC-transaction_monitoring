@@ -34,6 +34,10 @@ public class AlertService {
 //        }
 //        return alertRepository.save(alert);
 //    }
+    public void createAlert(Alert alert){
+        createAlert(alert, AlertSeverity.LOW);
+    }
+
     public Alert createAlert(Alert alert, AlertSeverity severity) {
         if (alert.getStatus() == null) {
             alert.setStatus(AlertStatus.OPEN);
