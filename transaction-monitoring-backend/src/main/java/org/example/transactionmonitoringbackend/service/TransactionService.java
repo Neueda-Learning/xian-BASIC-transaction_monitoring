@@ -4,8 +4,10 @@ import jakarta.transaction.Transactional;
 import org.example.transactionmonitoringbackend.entity.Alert;
 import org.example.transactionmonitoringbackend.entity.AlertSeverity;
 import org.example.transactionmonitoringbackend.entity.Transaction;
+import org.example.transactionmonitoringbackend.exception.TransactionNotFoundException;
 import org.example.transactionmonitoringbackend.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -72,7 +74,11 @@ public class TransactionService {
     }
 
     public Transaction getTransactionById(Long id) {
-        return transactionRepository.getTransactionById(id);
+        try {
+            return transactionRepository.getTransactionById(id);
+        } catch (EmptyResultDataAccessException e) {
+            throw new TransactionNotFoundException("Transaction not found");
+        }
     }
 
     public List<Transaction> filterByAmountAndTimeRange(BigDecimal minAmount,

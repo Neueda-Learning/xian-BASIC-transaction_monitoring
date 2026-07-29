@@ -4,6 +4,7 @@ package org.example.transactionmonitoringbackend.controller;
 import org.example.transactionmonitoringbackend.entity.Alert;
 import org.example.transactionmonitoringbackend.entity.AlertSeverity;
 import org.example.transactionmonitoringbackend.entity.AlertStatus;
+import org.example.transactionmonitoringbackend.exception.AlertNotFoundException;
 import org.example.transactionmonitoringbackend.service.AlertService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,12 +30,11 @@ public class AlertController {
     //get by id
     @GetMapping("/{id}")
     public ResponseEntity<Alert> getAlertById(@PathVariable Long id) {
-       Alert alert  = alertService.getAlertById(id);
-       if (alert == null) {
-           return ResponseEntity.notFound().build();
-       }else {
-           return ResponseEntity.ok(alert);
-       }
+        Alert alert = alertService.getAlertById(id);
+        if (alert == null) {
+            throw new AlertNotFoundException("Alert not found");
+        }
+        return ResponseEntity.ok(alert);
     }
 
     //update status
@@ -47,18 +47,12 @@ public class AlertController {
 //        return ResponseEntity.ok(updateALert);
 //    }
     @PutMapping("/{id}/status")
-    public  ResponseEntity<?>  updateAlertStatus(
+    public ResponseEntity<Alert> updateAlertStatus(
             @PathVariable Long id,
             @RequestParam AlertStatus status
     ) {
-        try {
-            Alert updatedAlert = alertService.updateAlertStatus(id, status);
-            return ResponseEntity.ok(updatedAlert); //200
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage()); //400
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        }
+        Alert updatedAlert = alertService.updateAlertStatus(id, status);
+        return ResponseEntity.ok(updatedAlert);
     }
     // find all open alert
     @GetMapping("/open")
@@ -81,15 +75,11 @@ public class AlertController {
 
     //update severity
     @PutMapping("/{id}/severity")
-    public ResponseEntity<?> updateAlertSeverity(
+    public ResponseEntity<Alert> updateAlertSeverity(
             @PathVariable Long id,
             @RequestParam AlertSeverity severity) {
-        try {
-            Alert updatedAlert = alertService.updateAlertSeverity(id, severity);
-            return ResponseEntity.ok(updatedAlert);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        }
+        Alert updatedAlert = alertService.updateAlertSeverity(id, severity);
+        return ResponseEntity.ok(updatedAlert);
     }
 
 }

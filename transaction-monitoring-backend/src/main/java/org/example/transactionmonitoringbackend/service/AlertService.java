@@ -4,6 +4,8 @@ package org.example.transactionmonitoringbackend.service;
 import org.example.transactionmonitoringbackend.entity.Alert;
 import org.example.transactionmonitoringbackend.entity.AlertSeverity;
 import org.example.transactionmonitoringbackend.entity.AlertStatus;
+import org.example.transactionmonitoringbackend.exception.AlertNotFoundException;
+import org.example.transactionmonitoringbackend.exception.InvalidStatusTransitionException;
 import org.example.transactionmonitoringbackend.repository.AlertRepository;
 import org.springframework.stereotype.Service;
 
@@ -59,10 +61,10 @@ public class AlertService {
 //    }
     public Alert updateAlertStatus(Long id, AlertStatus newStatus) {
         Alert alert = alertRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("Alert not found"));
+                new AlertNotFoundException("Alert not found"));
         AlertStatus currentStatus = alert.getStatus();
         if (!currentStatus.isValidTransition(newStatus)) {
-            throw new IllegalArgumentException(
+            throw new InvalidStatusTransitionException(
                     String.format("invalid switch : %s to %s", currentStatus, newStatus)
             );
 
@@ -74,7 +76,7 @@ public class AlertService {
     //update severity
     public Alert updateAlertSeverity(Long id, AlertSeverity newSeverity) {
         Alert alert = alertRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Alert not found"));
+                .orElseThrow(() -> new AlertNotFoundException("Alert not found"));
         alert.setSeverity(newSeverity);
         return alertRepository.save(alert);
     }
@@ -95,4 +97,3 @@ public class AlertService {
 //        alert.setTransactionId(transaction.getId());
 //        alert.setRuleId(rule.getId());
 //        alertService.createAlert(alert);
-
