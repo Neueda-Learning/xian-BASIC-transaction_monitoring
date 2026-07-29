@@ -1,6 +1,7 @@
 package org.example.transactionmonitoringbackend.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -12,9 +13,11 @@ public class Alert {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonProperty("transaction_id")
     @Column(name = "transaction_id", nullable = false)
     private Long transactionId;
 
+    @JsonProperty("rule_id")
     @Column(name = "rule_id" ,nullable = false)
     private Long ruleId;
 
