@@ -47,18 +47,12 @@ public class AlertController {
 //        return ResponseEntity.ok(updateALert);
 //    }
     @PutMapping("/{id}/status")
-    public  ResponseEntity<?>  updateAlertStatus(
+    public ResponseEntity<Alert> updateAlertStatus(
             @PathVariable Long id,
             @RequestParam AlertStatus status
     ) {
-        try {
-            Alert updatedAlert = alertService.updateAlertStatus(id, status);
-            return ResponseEntity.ok(updatedAlert); //200
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage()); //400
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        }
+        Alert updatedAlert = alertService.updateAlertStatus(id, status);
+        return ResponseEntity.ok(updatedAlert);
     }
     // find all open alert
     @GetMapping("/open")
@@ -81,15 +75,11 @@ public class AlertController {
 
     //update severity
     @PutMapping("/{id}/severity")
-    public ResponseEntity<?> updateAlertSeverity(
+    public ResponseEntity<Alert> updateAlertSeverity(
             @PathVariable Long id,
             @RequestParam AlertSeverity severity) {
-        try {
-            Alert updatedAlert = alertService.updateAlertSeverity(id, severity);
-            return ResponseEntity.ok(updatedAlert);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        }
+        Alert updatedAlert = alertService.updateAlertSeverity(id, severity);
+        return ResponseEntity.ok(updatedAlert);
     }
 
 }
