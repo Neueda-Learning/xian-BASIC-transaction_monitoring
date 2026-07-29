@@ -10,6 +10,221 @@
     <script src="https://unpkg.com/react-is@18.2.0/umd/react-is.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+    <style>
+        :root {
+            --finance-navy: #0f172a;
+            --finance-slate: #1e293b;
+            --finance-blue: #1d4ed8;
+            --finance-blue-soft: #dbeafe;
+            --finance-green: #0f766e;
+            --finance-green-soft: #d1fae5;
+            --finance-amber: #b45309;
+            --finance-amber-soft: #fef3c7;
+            --finance-border: rgba(148, 163, 184, 0.22);
+            --finance-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+        }
+
+        html, body, #root {
+            min-height: 100%;
+        }
+
+        body {
+            margin: 0;
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(29, 78, 216, 0.12), transparent 28%),
+                radial-gradient(circle at top right, rgba(15, 118, 110, 0.10), transparent 26%),
+                linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+            color: #0f172a;
+        }
+
+        #root > .app-shell {
+            position: relative;
+        }
+
+        #root > .app-shell::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(120deg, rgba(255, 255, 255, 0.25), transparent 45%, rgba(255, 255, 255, 0.08));
+        }
+
+        .app-shell {
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .app-shell .bg-gray-800 {
+            background: linear-gradient(180deg, var(--finance-navy) 0%, var(--finance-slate) 100%);
+            box-shadow: 8px 0 30px rgba(15, 23, 42, 0.18);
+        }
+
+        .app-shell .bg-gray-800 button {
+            border: 1px solid transparent;
+            transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .app-shell .bg-gray-800 button:hover {
+            transform: translateX(2px);
+        }
+
+        .app-shell .bg-white {
+            border: 1px solid var(--finance-border);
+            box-shadow: var(--finance-shadow);
+            backdrop-filter: blur(8px);
+        }
+
+        .app-shell .bg-white.rounded-lg {
+            border-radius: 18px;
+        }
+
+        .app-shell input,
+        .app-shell textarea,
+        .app-shell select {
+            border: 1px solid rgba(148, 163, 184, 0.45);
+            background: rgba(255, 255, 255, 0.96);
+            color: #0f172a;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+        }
+
+        .app-shell input:focus,
+        .app-shell textarea:focus,
+        .app-shell select:focus {
+            outline: none;
+            border-color: rgba(29, 78, 216, 0.75);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.16);
+        }
+
+        .app-shell table {
+            overflow: hidden;
+            border-radius: 14px;
+        }
+
+        .app-shell thead.bg-gray-50 {
+            background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+        }
+
+        .app-shell tbody tr {
+            transition: background-color 0.15s ease, transform 0.15s ease;
+        }
+
+        .app-shell tbody tr:hover {
+            background: rgba(219, 234, 254, 0.55);
+        }
+
+        .app-shell button.bg-indigo-600 {
+            background: linear-gradient(135deg, #1d4ed8 0%, #4338ca 100%);
+            box-shadow: 0 12px 24px rgba(59, 130, 246, 0.26);
+        }
+
+        .app-shell button.bg-indigo-600:hover {
+            transform: translateY(-1px);
+        }
+
+        .app-shell button.bg-gray-500 {
+            background: linear-gradient(135deg, #475569 0%, #334155 100%);
+        }
+
+        .app-shell .text-green-600 {
+            color: var(--finance-green);
+        }
+
+        .app-shell .text-red-600 {
+            color: #b91c1c;
+        }
+
+        .app-shell .bg-white h2,
+        .app-shell .bg-white h3 {
+            color: #0f172a;
+            letter-spacing: -0.01em;
+        }
+
+        .app-shell .bg-white h2::after,
+        .app-shell .bg-white h3::after {
+            content: "";
+            display: block;
+            width: 56px;
+            height: 3px;
+            margin-top: 8px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--finance-blue), rgba(29, 78, 216, 0.12));
+        }
+
+        .app-shell .shadow,
+        .app-shell .shadow-lg {
+            box-shadow: var(--finance-shadow);
+        }
+
+        .metric-card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(255, 255, 255, 0.9));
+            border: 1px solid var(--finance-border);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        }
+
+        .metric-label {
+            color: #475569;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .status-badge,
+        .severity-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.2rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            border: 1px solid transparent;
+        }
+
+        .status-open,
+        .severity-high {
+            color: #b91c1c;
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+
+        .status-acknowledged,
+        .status-investigating,
+        .severity-medium {
+            color: var(--finance-amber);
+            background: #fff7ed;
+            border-color: #fed7aa;
+        }
+
+        .status-closed,
+        .severity-low {
+            color: #0f766e;
+            background: #f0fdfa;
+            border-color: #99f6e4;
+        }
+
+        .status-dismissed {
+            color: #475569;
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .toolbar-action-btn {
+            width: 120px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
 </head>
 <body>
 <div id="root"></div>
@@ -29,6 +244,80 @@
     const CreditCard = (props) => <Icon path="M21 4H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM1 10h22" {...props} />;
     const Settings = (props) => <Icon path="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" {...props} />;
 
+    const formatCurrency = (value, currency = 'USD') => {
+        const amount = Number(value);
+        if (Number.isNaN(amount)) {
+            return '-';
+        }
+
+        try {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: currency || 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            }).format(amount);
+        } catch (error) {
+            return `${currency || 'USD'} ${amount.toFixed(2)}`;
+        }
+    };
+
+    const formatDateTime = (value) => {
+        if (!value) {
+            return '-';
+        }
+
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+            return value;
+        }
+
+        return new Intl.DateTimeFormat('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+        }).format(date);
+    };
+
+    const getStatusClassName = (status) => {
+        switch (status) {
+            case 'OPEN':
+                return 'status-open';
+            case 'ACKNOWLEDGED':
+                return 'status-acknowledged';
+            case 'INVESTIGATING':
+                return 'status-investigating';
+            case 'CLOSED':
+                return 'status-closed';
+            case 'DISMISSED':
+                return 'status-dismissed';
+            default:
+                return 'status-dismissed';
+        }
+    };
+
+    const getSeverityClassName = (severity) => {
+        switch (severity) {
+            case 'HIGH':
+                return 'severity-high';
+            case 'MEDIUM':
+                return 'severity-medium';
+            case 'LOW':
+                return 'severity-low';
+            default:
+                return 'severity-low';
+        }
+    };
+
+    const FIXED_RULE_DETAILS = {
+        1: 'Rule 1: Single transaction amount exceeds the threshold (10,000).',
+        2: 'Rule 2: More than 5 transactions from the same account within 10 minutes.',
+        3: 'Rule 3: First transaction to an unknown payee.',
+        4: 'Rule 4: Daily cumulative amount exceeds the limit (50,000).',
+    };
+
     // --- 1. Sidebar Component ---
     const Sidebar = ({ activeTab, setActiveTab }) => {
        const menuItems = [
@@ -37,7 +326,10 @@
 ];
         return (
             <div className="w-64 bg-gray-800 text-white flex flex-col h-screen">
-                <div className="p-6 text-2xl font-bold border-b border-gray-700">	Monitoring Center </div>
+                <div className="p-6 border-b border-gray-700">
+                    <div className="text-xs uppercase tracking-widest text-blue-200">Transaction Surveillance</div>
+                    <div className="text-2xl font-bold mt-1">Risk Monitoring Hub</div>
+                </div>
                 <nav className="flex-1 p-4 space-y-2">
                     {menuItems.map(item => (
                         <button key={item.id} onClick={() => setActiveTab(item.id)}
@@ -57,6 +349,12 @@
         const [savingMap, setSavingMap] = useState({});
         const [statusDraftMap, setStatusDraftMap] = useState({});
         const [saveError, setSaveError] = useState('');
+        const [alertPage, setAlertPage] = useState(1);
+        const [detailModalOpen, setDetailModalOpen] = useState(false);
+        const [detailLoading, setDetailLoading] = useState(false);
+        const [detailError, setDetailError] = useState('');
+        const [selectedAlert, setSelectedAlert] = useState(null);
+        const [selectedAlertTransaction, setSelectedAlertTransaction] = useState(null);
 
         const ALERT_STATUSES = ['OPEN', 'ACKNOWLEDGED', 'INVESTIGATING', 'CLOSED', 'DISMISSED'];
         const statusLabelMap = {
@@ -88,6 +386,41 @@
 
         const getValidTargets = (currentStatus) =>
             ALERT_STATUSES.filter(status => isValidTransition(currentStatus, status));
+
+        const openAlertDetailModal = async (alert) => {
+            const transactionId = alert.transaction_id || alert.transactionId;
+            setDetailModalOpen(true);
+            setSelectedAlert(alert);
+            setSelectedAlertTransaction(null);
+            setDetailError('');
+
+            if (!transactionId) {
+                setDetailError('This alert has no transaction ID.');
+                return;
+            }
+
+            setDetailLoading(true);
+            try {
+                const response = await fetch(`${API_BASE_URL}/transactions/${transactionId}`);
+                if (!response.ok) {
+                    throw new Error(`Transaction ${transactionId} not found`);
+                }
+                const data = await response.json();
+                setSelectedAlertTransaction(data);
+            } catch (error) {
+                setDetailError(error.message);
+            } finally {
+                setDetailLoading(false);
+            }
+        };
+
+        const closeAlertDetailModal = () => {
+            setDetailModalOpen(false);
+            setDetailLoading(false);
+            setDetailError('');
+            setSelectedAlert(null);
+            setSelectedAlertTransaction(null);
+        };
 
         const updateAlertStatus = async (alert, targetStatus) => {
             if (!targetStatus || !isValidTransition(alert.status, targetStatus)) {
@@ -203,27 +536,64 @@ setSaveError(`Failed to update alert #${alert.id}: ${err.message}`);
                 });
         }, []);
 
-        if (loading) return <div className="p-8">Loading data from backend...</div>;
-
         const severityData = [
-            { name: '高', value: alerts.filter(a => a.severity === 'HIGH').length },
-            { name: '中', value: alerts.filter(a => a.severity === 'MEDIUM').length },
-            { name: '低', value: alerts.filter(a => a.severity === 'LOW').length },
+            { name: 'High', value: alerts.filter(a => a.severity === 'HIGH').length },
+            { name: 'Medium', value: alerts.filter(a => a.severity === 'MEDIUM').length },
+            { name: 'Low', value: alerts.filter(a => a.severity === 'LOW').length },
         ];
         const COLORS = ['#ef4444', '#eab308', '#3b82f6'];
+        const unresolvedCount = alerts.filter(a => a.status === 'OPEN' || a.status === 'INVESTIGATING').length;
+        const acknowledgedCount = alerts.filter(a => a.status === 'ACKNOWLEDGED').length;
+        const closedCount = alerts.filter(a => a.status === 'CLOSED').length;
+        const ALERTS_PER_PAGE = 5;
+        const sortedAlerts = [...alerts].sort((a, b) => {
+            const timeA = new Date(a.updatedAt || a.createdAt || a.alertTime || 0).getTime();
+            const timeB = new Date(b.updatedAt || b.createdAt || b.alertTime || 0).getTime();
+
+            if (!Number.isNaN(timeA) && !Number.isNaN(timeB) && timeA !== timeB) {
+                return timeB - timeA;
+            }
+
+            return (Number(b.id) || 0) - (Number(a.id) || 0);
+        });
+        const totalAlertPages = Math.max(1, Math.ceil(sortedAlerts.length / ALERTS_PER_PAGE));
+        const safeAlertPage = Math.min(alertPage, totalAlertPages);
+        const visibleAlerts = sortedAlerts.slice((safeAlertPage - 1) * ALERTS_PER_PAGE, safeAlertPage * ALERTS_PER_PAGE);
+
+        useEffect(() => {
+            setAlertPage(prev => Math.min(prev, totalAlertPages));
+        }, [totalAlertPages]);
+
+        if (loading) return <div className="p-8">Loading data from backend...</div>;
 
         return (
             <div className="p-8 space-y-8">
-                <h2 className="text-3xl font-bold text-gray-800">Alert Dashboard</h2>
+                <div className="bg-white p-6 rounded-lg shadow">
+                    <div className="section-title">
+                        <div>
+                            <h2 className="text-3xl font-bold text-gray-800">Risk Alert Dashboard</h2>
+                            <p className="text-sm text-slate-500 mt-2">Real-time operational risk view for AML and transaction surveillance teams.</p>
+                        </div>
+                        <div className="text-xs text-slate-500">Control Window: {formatDateTime(new Date())}</div>
+                    </div>
+                </div>
                 {saveError && (
                     <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                         {saveError}
                     </div>
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white p-6 rounded-lg shadow border-l-4 border-red-500">
-                        <h3 className="text-gray-500 text-sm">Unresolved Alerts</h3>
-                        <p className="text-3xl font-bold mt-2">{alerts.filter(a => a.status === 'OPEN').length}</p>
+                    <div className="metric-card p-6 border-l-4 border-red-500">
+                        <h3 className="metric-label">Unresolved Alerts</h3>
+                        <p className="text-3xl font-bold mt-2">{unresolvedCount}</p>
+                    </div>
+                    <div className="metric-card p-6 border-l-4 border-amber-500">
+                        <h3 className="metric-label">Acknowledged Cases</h3>
+                        <p className="text-3xl font-bold mt-2">{acknowledgedCount}</p>
+                    </div>
+                    <div className="metric-card p-6 border-l-4 border-emerald-500">
+                        <h3 className="metric-label">Closed Cases</h3>
+                        <p className="text-3xl font-bold mt-2">{closedCount}</p>
                     </div>
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -237,10 +607,11 @@ setSaveError(`Failed to update alert #${alert.id}: ${err.message}`);
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Severity</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status Transition</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Details</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {alerts.map(alert => {
+                                {visibleAlerts.map(alert => {
                                     const validTargets = getValidTargets(alert.status);
                                     const selectedTarget = statusDraftMap[alert.id] || '';
                                     const isSaving = !!savingMap[alert.id];
@@ -250,8 +621,12 @@ setSaveError(`Failed to update alert #${alert.id}: ${err.message}`);
                                         <tr key={alert.id}>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm">#{alert.id}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm">{alert.transaction_id}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm">{alert.severity}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm">{statusLabelMap[alert.status] || alert.status}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                <span className={`severity-badge ${getSeverityClassName(alert.severity)}`}>{alert.severity}</span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                <span className={`status-badge ${getStatusClassName(alert.status)}`}>{statusLabelMap[alert.status] || alert.status}</span>
+                                            </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm">
                                                 <div className="flex items-center gap-2">
                                                     <select
@@ -274,11 +649,42 @@ setSaveError(`Failed to update alert #${alert.id}: ${err.message}`);
                                                     </button>
                                                 </div>
                                             </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                <button
+                                                    type="button"
+                                                    className="bg-gray-800 text-white px-3 py-1 rounded text-sm hover:bg-gray-700"
+                                                    onClick={() => openAlertDetailModal(alert)}
+                                                >
+                                                    View
+                                                </button>
+                                            </td>
                                         </tr>
                                     );
                                 })}
                             </tbody>
                         </table>
+                        <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+                            <div>Showing {(safeAlertPage - 1) * ALERTS_PER_PAGE + (visibleAlerts.length ? 1 : 0)}-{(safeAlertPage - 1) * ALERTS_PER_PAGE + visibleAlerts.length} of {sortedAlerts.length}</div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    className="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+                                    disabled={safeAlertPage === 1}
+                                    onClick={() => setAlertPage(prev => Math.max(1, prev - 1))}
+                                >
+                                    Previous
+                                </button>
+                                <span>Page {safeAlertPage} / {totalAlertPages}</span>
+                                <button
+                                    type="button"
+                                    className="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+                                    disabled={safeAlertPage === totalAlertPages}
+                                    onClick={() => setAlertPage(prev => Math.min(totalAlertPages, prev + 1))}
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div className="bg-white p-6 rounded-lg shadow">
                         <ResponsiveContainer width="100%" height={300}>
@@ -291,6 +697,49 @@ setSaveError(`Failed to update alert #${alert.id}: ${err.message}`);
                         </ResponsiveContainer>
                     </div>
                 </div>
+
+                {detailModalOpen && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl p-6">
+                            <div className="flex items-start justify-between gap-3 mb-4">
+                                <div>
+                                    <h3 className="text-xl font-semibold">Alert Detail</h3>
+                                    <p className="text-sm text-slate-500">Alert #{selectedAlert?.id || '-'} - Transaction and rule context</p>
+                                </div>
+                                <button type="button" className="bg-gray-500 text-white px-3 py-1 rounded" onClick={closeAlertDetailModal}>Close</button>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mb-4">
+                                <div><strong>Transaction ID:</strong> {selectedAlert?.transaction_id || selectedAlert?.transactionId || '-'}</div>
+                                <div><strong>Rule ID:</strong> {selectedAlert?.rule_id || selectedAlert?.ruleId || '-'}</div>
+                                <div><strong>Severity:</strong> {selectedAlert?.severity || '-'}</div>
+                                <div><strong>Status:</strong> {selectedAlert?.status || '-'}</div>
+                            </div>
+
+                            <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-4 text-sm">
+                                <strong>Violated Rule:</strong>{' '}
+                                {FIXED_RULE_DETAILS[selectedAlert?.rule_id || selectedAlert?.ruleId] || 'Rule details are not available.'}
+                            </div>
+
+                            {detailLoading && <div className="text-sm text-slate-600">Loading transaction details...</div>}
+                            {detailError && <div className="text-sm text-red-600">{detailError}</div>}
+
+                            {!detailLoading && selectedAlertTransaction && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                    <div><strong>ID:</strong> {selectedAlertTransaction.id}</div>
+                                    <div><strong>Account ID:</strong> {selectedAlertTransaction.accountId}</div>
+                                    <div><strong>Payee ID:</strong> {selectedAlertTransaction.payeeId}</div>
+                                    <div><strong>Amount:</strong> {formatCurrency(selectedAlertTransaction.amount, selectedAlertTransaction.currency)}</div>
+                                    <div><strong>Currency:</strong> {selectedAlertTransaction.currency}</div>
+                                    <div><strong>Type:</strong> {selectedAlertTransaction.transType}</div>
+                                    <div><strong>Timestamp:</strong> {formatDateTime(selectedAlertTransaction.transTimestamp)}</div>
+                                    <div><strong>Status:</strong> {selectedAlertTransaction.status || '-'}</div>
+                                    <div className="md:col-span-2"><strong>Description:</strong> {selectedAlertTransaction.description || '-'}</div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
         );
     };
@@ -311,6 +760,8 @@ setSaveError(`Failed to update alert #${alert.id}: ${err.message}`);
         const [filterEndTime, setFilterEndTime] = useState('');
         const [isFiltering, setIsFiltering] = useState(false);
         const [filterError, setFilterError] = useState('');
+        const [showAddForm, setShowAddForm] = useState(false);
+        const [txPage, setTxPage] = useState(1);
         const [formData, setFormData] = useState({
             accountId: '',
             payeeId: '',
@@ -327,6 +778,7 @@ setSaveError(`Failed to update alert #${alert.id}: ${err.message}`);
                 .then(res => res.json())
                 .then(data => {
                     setTransactions(data);
+                    setTxPage(1);
                     setLoading(false);
                 })
                 .catch(err => {
@@ -434,6 +886,7 @@ setSaveError(`Failed to update alert #${alert.id}: ${err.message}`);
 
                 const data = await response.json();
                 setTransactions(data);
+                setTxPage(1);
             } catch (err) {
                 setFilterError(err.message);
             } finally {
@@ -450,12 +903,57 @@ setSaveError(`Failed to update alert #${alert.id}: ${err.message}`);
             loadTransactions();
         };
 
+        const TRANSACTIONS_PER_PAGE = 10;
+        const sortedTransactions = [...transactions].sort((a, b) => {
+            const timeA = new Date(a.transTimestamp || a.createdAt || 0).getTime();
+            const timeB = new Date(b.transTimestamp || b.createdAt || 0).getTime();
+
+            if (!Number.isNaN(timeA) && !Number.isNaN(timeB) && timeA !== timeB) {
+                return timeB - timeA;
+            }
+
+            return (Number(b.id) || 0) - (Number(a.id) || 0);
+        });
+        const totalTransactionPages = Math.max(1, Math.ceil(sortedTransactions.length / TRANSACTIONS_PER_PAGE));
+        const safeTxPage = Math.min(txPage, totalTransactionPages);
+        const visibleTransactions = sortedTransactions.slice((safeTxPage - 1) * TRANSACTIONS_PER_PAGE, safeTxPage * TRANSACTIONS_PER_PAGE);
+
+        useEffect(() => {
+            setTxPage(prev => Math.min(prev, totalTransactionPages));
+        }, [totalTransactionPages]);
+
         if (loading) return <div className="p-8">Loading data from backend...</div>;
 
         return (
             <div className="p-8 space-y-8">
-                <h2 className="text-3xl font-bold text-gray-800">Transactions List</h2>
-                <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                    <h2 className="text-3xl font-bold text-gray-800">Transactions List</h2>
+                    <button
+                        type="button"
+                        className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+                        onClick={() => setShowAddForm(prev => !prev)}
+                    >
+                        {showAddForm ? 'Close Add Transaction' : 'Add Transaction'}
+                    </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="metric-card p-6">
+                        <div className="metric-label">Total Records</div>
+                        <div className="text-3xl font-bold mt-2">{transactions.length}</div>
+                    </div>
+                    <div className="metric-card p-6">
+                        <div className="metric-label">Largest Amount</div>
+                        <div className="text-3xl font-bold mt-2">
+                            {transactions.length ? formatCurrency(Math.max(...transactions.map(tx => Number(tx.amount) || 0)), transactions[0].currency || 'USD') : '-'}
+                        </div>
+                    </div>
+                    <div className="metric-card p-6">
+                        <div className="metric-label">Debit Transactions</div>
+                        <div className="text-3xl font-bold mt-2">{transactions.filter(tx => tx.transType === 'DEBIT').length}</div>
+                    </div>
+                </div>
+                {showAddForm && (
+                    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow space-y-4">
                     <h3 className="text-xl font-semibold">Add Transaction</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <input name="accountId" value={formData.accountId} onChange={handleChange} className="border rounded px-3 py-2" placeholder="Account ID" required />
@@ -471,45 +969,25 @@ setSaveError(`Failed to update alert #${alert.id}: ${err.message}`);
                         {submitMessage && <span className="text-green-600 text-sm">{submitMessage}</span>}
                         {submitError && <span className="text-red-600 text-sm">{submitError}</span>}
                     </div>
-                </form>
+                    </form>
+                )}
 
-                <div className="bg-white p-6 rounded-lg shadow space-y-4">
-                    <h3 className="text-xl font-semibold">Find Transaction By ID</h3>
-                    <div className="flex gap-3">
+                <div className="bg-white p-4 rounded-lg shadow space-y-3">
+                    <div className="flex flex-nowrap items-end gap-3 overflow-x-auto pb-1">
                         <input
                             type="number"
-                            className="border rounded px-3 py-2 flex-1"
+                            className="border rounded px-3 py-2 w-40"
                             placeholder="Transaction ID"
                             value={detailId}
                             onChange={(e) => setDetailId(e.target.value)}
                         />
-                        <button type="button" onClick={loadTransactionById} className="bg-gray-800 text-white px-4 py-2 rounded">
+                        <button type="button" onClick={loadTransactionById} className="toolbar-action-btn bg-gray-800 text-white px-4 py-2 rounded text-sm">
                             {detailLoading ? 'Loading...' : 'Search'}
                         </button>
-                    </div>
-                    {detailError && <div className="text-red-600 text-sm">{detailError}</div>}
-                    {selectedTransaction && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-700">
-                            <div><strong>ID:</strong> {selectedTransaction.id}</div>
-                            <div><strong>Account ID:</strong> {selectedTransaction.accountId}</div>
-                            <div><strong>Payee ID:</strong> {selectedTransaction.payeeId}</div>
-                            <div><strong>Amount:</strong> {selectedTransaction.amount}</div>
-                            <div><strong>Currency:</strong> {selectedTransaction.currency}</div>
-                            <div><strong>Type:</strong> {selectedTransaction.transType}</div>
-                            <div><strong>Timestamp:</strong> {selectedTransaction.transTimestamp}</div>
-                            <div><strong>Status:</strong> {selectedTransaction.status || '-'}</div>
-                            <div className="md:col-span-2"><strong>Description:</strong> {selectedTransaction.description || '-'}</div>
-                        </div>
-                    )}
-                </div>
-
-                <div className="bg-white p-6 rounded-lg shadow space-y-4">
-                    <h3 className="text-xl font-semibold">Filter Transactions by Amount & Date Range</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <input
                             type="number"
                             step="0.01"
-                            className="border rounded px-3 py-2"
+                            className="border rounded px-3 py-2 w-36"
                             placeholder="Minimum Amount"
                             value={filterMinAmount}
                             onChange={(e) => setFilterMinAmount(e.target.value)}
@@ -517,7 +995,7 @@ setSaveError(`Failed to update alert #${alert.id}: ${err.message}`);
                         <input
                             type="number"
                             step="0.01"
-                            className="border rounded px-3 py-2"
+                            className="border rounded px-3 py-2 w-36"
                             placeholder="Maximum Amount"
                             value={filterMaxAmount}
                             onChange={(e) => setFilterMaxAmount(e.target.value)}
@@ -536,25 +1014,31 @@ setSaveError(`Failed to update alert #${alert.id}: ${err.message}`);
                             value={filterEndTime}
                             onChange={(e) => setFilterEndTime(e.target.value)}
                         />
-                    </div>
-                    {filterError && <div className="text-red-600 text-sm">{filterError}</div>}
-                    <div className="flex gap-3">
                         <button
                             type="button"
                             onClick={handleFilterTransactions}
                             disabled={isFiltering}
-                            className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 disabled:bg-gray-400"
+                            className="toolbar-action-btn bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 disabled:bg-gray-400 text-sm"
                         >
                             {isFiltering ? 'Filtering...' : 'Apply Filter'}
                         </button>
                         <button
                             type="button"
                             onClick={handleResetFilter}
-                            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                            className="toolbar-action-btn bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 text-sm"
                         >
                             Reset Filter
                         </button>
                     </div>
+                    {detailError && <div className="text-red-600 text-sm">{detailError}</div>}
+                    {filterError && <div className="text-red-600 text-sm">{filterError}</div>}
+                    {selectedTransaction && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-700 bg-slate-50 border border-slate-200 rounded-lg p-3">
+                            <div><strong>ID:</strong> {selectedTransaction.id}</div>
+                            <div><strong>Amount:</strong> {formatCurrency(selectedTransaction.amount, selectedTransaction.currency)}</div>
+                            <div><strong>Status:</strong> {selectedTransaction.status || '-'}</div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="bg-white p-6 rounded-lg shadow">
@@ -571,19 +1055,43 @@ setSaveError(`Failed to update alert #${alert.id}: ${err.message}`);
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {transactions.map(tx => (
+                            {visibleTransactions.map(tx => (
                                 <tr key={tx.id}>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">{tx.id}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">{tx.accountId}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">{tx.payeeId}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm">${tx.amount}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold">{formatCurrency(tx.amount, tx.currency)}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">{tx.currency}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">{tx.transType}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm">{tx.status || '-'}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                        <span className={`status-badge ${getStatusClassName(tx.status)}`}>{tx.status || '-'}</span>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
+                    <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+                        <div>Showing {(safeTxPage - 1) * TRANSACTIONS_PER_PAGE + (visibleTransactions.length ? 1 : 0)}-{(safeTxPage - 1) * TRANSACTIONS_PER_PAGE + visibleTransactions.length} of {transactions.length}</div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                className="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+                                disabled={safeTxPage === 1}
+                                onClick={() => setTxPage(prev => Math.max(1, prev - 1))}
+                            >
+                                Previous
+                            </button>
+                            <span>Page {safeTxPage} / {totalTransactionPages}</span>
+                            <button
+                                type="button"
+                                className="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+                                disabled={safeTxPage === totalTransactionPages}
+                                onClick={() => setTxPage(prev => Math.min(totalTransactionPages, prev + 1))}
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -600,7 +1108,7 @@ setSaveError(`Failed to update alert #${alert.id}: ${err.message}`);
             }
         };
         return (
-            <div className="flex h-screen bg-gray-100">
+            <div className="flex h-screen bg-gray-100 app-shell">
                 <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
                 <main className="flex-1 overflow-y-auto">{renderContent()}</main>
             </div>
