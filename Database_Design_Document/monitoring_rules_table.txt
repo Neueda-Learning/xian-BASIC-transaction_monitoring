@@ -1,0 +1,37 @@
+1.monitoring_rules table
+This table stores only the fields needed by the four built-in rules.
+
+2.fields
+id, BIGINT, primary key, auto_increment
+rule_type, VARCHAR(64), unique rule code: AMOUNT_THRESHOLD / VELOCITY_RULE / NEW_PAYEE_RULE / DAILY_LIMIT_RULE
+is_active, TINYINT(1), whether the rule is enabled
+threshold_amount, DECIMAL(18,2), amount threshold for AMOUNT_THRESHOLD
+max_count, INT, transaction count threshold for VELOCITY_RULE
+time_window_minutes, INT, rolling window (minutes) for VELOCITY_RULE
+daily_limit_amount, DECIMAL(18,2), daily total threshold for DAILY_LIMIT_RULE
+
+3.create table sql
+CREATE TABLE `monitoring_rules` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `rule_type` VARCHAR(64) NOT NULL,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `threshold_amount` DECIMAL(18,2) DEFAULT NULL,
+  `max_count` INT DEFAULT NULL,
+  `time_window_minutes` INT DEFAULT NULL,
+  `daily_limit_amount` DECIMAL(18,2) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_rule_type` (`rule_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+4.recommended seed data
+INSERT INTO monitoring_rules(rule_type, is_active, threshold_amount)
+VALUES ('AMOUNT_THRESHOLD', 1, 10000.00);
+
+INSERT INTO monitoring_rules(rule_type, is_active, max_count, time_window_minutes)
+VALUES ('VELOCITY_RULE', 1, 5, 10);
+
+INSERT INTO monitoring_rules(rule_type, is_active)
+VALUES ('NEW_PAYEE_RULE', 1);
+
+INSERT INTO monitoring_rules(rule_type, is_active, daily_limit_amount)
+VALUES ('DAILY_LIMIT_RULE', 1, 50000.00);
