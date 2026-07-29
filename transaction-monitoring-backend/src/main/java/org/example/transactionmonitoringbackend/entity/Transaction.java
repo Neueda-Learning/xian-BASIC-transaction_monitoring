@@ -46,7 +46,9 @@ public class Transaction {
     @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
-    public Transaction(Long id, String accountId, String payeeId, BigDecimal amount, String currency, String transType, LocalDateTime transTimestamp, String description, LocalDateTime createdAt) {
+    private String status;
+
+    public Transaction(Long id, String accountId, String payeeId, BigDecimal amount, String currency, String transType, LocalDateTime transTimestamp, String description, LocalDateTime createdAt, String status) {
         this.id = id;
         this.accountId = accountId;
         this.payeeId = payeeId;
@@ -56,6 +58,7 @@ public class Transaction {
         this.transTimestamp = transTimestamp;
         this.description = description;
         this.createdAt = createdAt;
+        this.status = status;
     }
     public Transaction() {
     }
@@ -130,5 +133,13 @@ public class Transaction {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }
