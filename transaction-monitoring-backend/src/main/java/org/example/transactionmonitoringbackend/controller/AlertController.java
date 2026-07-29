@@ -4,6 +4,7 @@ package org.example.transactionmonitoringbackend.controller;
 import org.example.transactionmonitoringbackend.entity.Alert;
 import org.example.transactionmonitoringbackend.entity.AlertStatus;
 import org.example.transactionmonitoringbackend.service.AlertService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,22 +52,23 @@ public class AlertController {
     ) {
         try {
             Alert updatedAlert = alertService.updateAlertStatus(id, status);
-            return ResponseEntity.ok(updatedAlert);
+            return ResponseEntity.ok(updatedAlert); //200
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage()); //400
         } catch (RuntimeException e) {
             return ResponseEntity.status(404).body(e.getMessage());
         }
     }
-
-
-
-
-
     // find all open alert
     @GetMapping("/open")
     public List<Alert> getOpenAlerts() {
         return alertService.getOpenAlerts();
+    }
+
+    @PostMapping
+    public ResponseEntity<Alert> createAlert(@RequestBody Alert alert) {
+        Alert saved = alertService.createAlert(alert);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
 }
