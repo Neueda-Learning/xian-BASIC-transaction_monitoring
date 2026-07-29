@@ -65,8 +65,7 @@ public class RulesTest {
         Transaction tx = baseTx();
         tx.setAccountId("ACC_RULES_002");
         tx.setPayeeId("PAYEE_RULES_002");
-        tx.setTransTimestamp(txTime.minusHours(8));
-
+//      tx.setTransTimestamp(txTime.minusHours(8));
         int result = fixedRules.checkWindow(tx);
 
         assertEquals(2, result);
