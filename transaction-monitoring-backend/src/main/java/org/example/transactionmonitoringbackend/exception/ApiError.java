@@ -9,8 +9,7 @@ public class ApiError {
     private String message;
     private String path;
 
-    public ApiError(){
-
+    public ApiError() {
     }
 
     public ApiError(LocalDateTime timestamp, int status, String error, String message, String path) {
