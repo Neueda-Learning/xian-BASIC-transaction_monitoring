@@ -2,6 +2,7 @@ package org.example.transactionmonitoringbackend.service;
 
 
 import org.example.transactionmonitoringbackend.entity.Alert;
+import org.example.transactionmonitoringbackend.entity.AlertSeverity;
 import org.example.transactionmonitoringbackend.entity.AlertStatus;
 import org.example.transactionmonitoringbackend.repository.AlertRepository;
 import org.springframework.stereotype.Service;
@@ -27,12 +28,23 @@ public class AlertService {
     }
 
     //create new alert
-    public Alert createAlert(Alert alert){
+//    public Alert createAlert(Alert alert){
+//        if (alert.getStatus() == null) {
+//            alert.setStatus(AlertStatus.OPEN);
+//        }
+//        return alertRepository.save(alert);
+//    }
+    public Alert createAlert(Alert alert, AlertSeverity severity) {
         if (alert.getStatus() == null) {
             alert.setStatus(AlertStatus.OPEN);
         }
+        // severity setting
+        if (severity != null) {
+            alert.setSeverity(severity);
+        }
         return alertRepository.save(alert);
     }
+
 
     //update alert status
 //    public Alert updateAlertStatus(Long id, AlertStatus newStatus){
@@ -54,11 +66,22 @@ public class AlertService {
         alert.setStatus(newStatus);
         return alertRepository.save(alert);
     }
+
+    //update severity
+    public Alert updateAlertSeverity(Long id, AlertSeverity newSeverity) {
+        Alert alert = alertRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Alert not found"));
+        alert.setSeverity(newSeverity);
+        return alertRepository.save(alert);
+    }
+
     //get open alert
     public List<Alert> getOpenAlerts(){
 
         return alertRepository.findByStatus(AlertStatus.OPEN);
     }
+
+
 
 
 }

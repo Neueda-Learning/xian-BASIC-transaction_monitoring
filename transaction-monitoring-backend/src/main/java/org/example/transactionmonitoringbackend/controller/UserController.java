@@ -4,6 +4,7 @@ import org.example.transactionmonitoringbackend.repository.UserRepository;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping("/api/user")
 @CrossOrigin(origins = "*")
 public class UserController {

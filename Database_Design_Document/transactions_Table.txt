@@ -26,7 +26,7 @@
 5. Creation Statement
 
 CREATE TABLE `transactions` (
-  `id` BIGINT NOT NULL,
+  `id` BIGINT NOT NULL auto_increment,
   `account_id` VARCHAR(64) NOT NULL,
   `payee_id` VARCHAR(64) NOT NULL,
   `amount` DECIMAL(18,2) NOT NULL,

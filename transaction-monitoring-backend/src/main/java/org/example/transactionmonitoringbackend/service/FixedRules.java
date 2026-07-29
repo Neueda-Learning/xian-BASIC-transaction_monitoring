@@ -5,6 +5,7 @@ import org.example.transactionmonitoringbackend.entity.Transaction;
 import org.example.transactionmonitoringbackend.repository.MonitoringRuleRepository;
 import org.example.transactionmonitoringbackend.repository.TransactionRepository;
 import org.example.transactionmonitoringbackend.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -39,7 +40,7 @@ public class FixedRules {
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
     private final MonitoringRuleRepository monitoringRuleRepository;
-
+    @Autowired
     public FixedRules(TransactionRepository transactionRepository,
                       UserRepository userRepository,
                       MonitoringRuleRepository monitoringRuleRepository) {
@@ -203,7 +204,7 @@ public class FixedRules {
         Instant dayStart = LocalDate.ofInstant(txTime, ZoneOffset.UTC)
                 .atStartOfDay()
                 .toInstant(ZoneOffset.UTC);
-        Instant dayEnd = dayStart.plusSeconds(24 * 60 * 60L);
+        Instant dayEnd = dayStart.plusSeconds(24*60*60L);
         BigDecimal dailyTotal = transactionRepository.sumAmountByAccountIdAndTransactionTimeBetween(
                 transaction.getAccountId(),
                 dayStart,
