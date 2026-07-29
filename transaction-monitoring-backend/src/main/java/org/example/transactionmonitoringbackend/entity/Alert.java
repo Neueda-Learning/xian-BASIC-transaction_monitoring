@@ -25,12 +25,26 @@ public class Alert {
     @Column(nullable = false)
     private AlertStatus status = AlertStatus.OPEN;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AlertSeverity severity = AlertSeverity.LOW;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
 
     public Alert() {
         this.createdAt = LocalDateTime.now();
     }
+
+    public AlertSeverity getSeverity() {
+        return severity;
+    }
+
+    public void setSeverity(AlertSeverity severity) {
+        this.severity = severity;
+    }
+
 
     public Long getId() {
         return id;

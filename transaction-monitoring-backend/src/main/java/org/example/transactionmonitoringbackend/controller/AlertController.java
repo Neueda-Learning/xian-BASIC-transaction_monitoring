@@ -2,6 +2,7 @@ package org.example.transactionmonitoringbackend.controller;
 
 
 import org.example.transactionmonitoringbackend.entity.Alert;
+import org.example.transactionmonitoringbackend.entity.AlertSeverity;
 import org.example.transactionmonitoringbackend.entity.AlertStatus;
 import org.example.transactionmonitoringbackend.service.AlertService;
 import org.springframework.http.HttpStatus;
@@ -65,10 +66,30 @@ public class AlertController {
         return alertService.getOpenAlerts();
     }
 
+//    @PostMapping
+//    public ResponseEntity<Alert> createAlert(@RequestBody Alert alert) {
+//        Alert saved = alertService.createAlert(alert);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+//    }
+
     @PostMapping
-    public ResponseEntity<Alert> createAlert(@RequestBody Alert alert) {
-        Alert saved = alertService.createAlert(alert);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    public ResponseEntity<Alert> createAlert(@RequestBody Alert alert,
+                                         @RequestParam(required = false) AlertSeverity severity) {
+            Alert saved = alertService.createAlert(alert, severity);
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+}
+
+    //update severity
+    @PutMapping("/{id}/severity")
+    public ResponseEntity<?> updateAlertSeverity(
+            @PathVariable Long id,
+            @RequestParam AlertSeverity severity) {
+        try {
+            Alert updatedAlert = alertService.updateAlertSeverity(id, severity);
+            return ResponseEntity.ok(updatedAlert);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        }
     }
 
 }
