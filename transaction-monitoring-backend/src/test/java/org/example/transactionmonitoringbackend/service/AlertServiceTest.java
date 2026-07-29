@@ -51,10 +51,25 @@ public class AlertServiceTest {
         Alert alert = alertService.getAlertById(id);
         assertNotNull(alert);
         assertEquals(id, alert.getId());
-        assertEquals(955, alert.getTransactionId());
+        assertEquals(955L, alert.getTransactionId());
         assertEquals(1, alert.getRuleId());
         assertEquals("OPEN", alert.getStatus().name());
     }
 
+    @Test
+    public void createAlert_test() {
+        Alert alert = new Alert();
+        alert.setTransactionId(9020L);
+        alert.setRuleId(4L);
+        alert.setStatus(null); // 验证默认 OPEN
 
+        Alert saved = alertService.createAlert(alert);
+
+        assertNotNull(saved);
+        assertNotNull(saved.getId());
+        assertEquals(AlertStatus.OPEN, saved.getStatus());
+        assertEquals(9020L, saved.getTransactionId());
+        assertEquals(4L, saved.getRuleId());
+
+    }
 }
