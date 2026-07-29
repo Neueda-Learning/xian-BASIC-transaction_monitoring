@@ -8,7 +8,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -46,10 +49,10 @@ public class RulesTest {
 
     @Test
     void checkWindow_trigger_test() {
+        Instant txInstant = Instant.parse("2026-07-28T04:00:00Z");
         // test rule 2
-        LocalDateTime txTime = LocalDateTime.of(2026, 7, 28, 12, 0, 0);
-        // add 5 transactions in 5 seconds
         for (int i = 0; i < 5; i++) {
+            Instant seedInstant = txInstant.minusSeconds(60 + i);
             jdbcTemplate.update(
                     "INSERT INTO transactions(account_id, payee_id, amount, currency, trans_type, trans_timestamp, description) VALUES (?,?,?,?,?,?,?)",
                     "ACC_RULES_002",
@@ -57,7 +60,7 @@ public class RulesTest {
                     new BigDecimal("10.00"),
                     "USD",
                     "DEBIT",
-                    txTime.minusMinutes(1).minusSeconds(i),
+                    Timestamp.from(seedInstant),
                     "window-" + i
             );
         }
@@ -65,9 +68,9 @@ public class RulesTest {
         Transaction tx = baseTx();
         tx.setAccountId("ACC_RULES_002");
         tx.setPayeeId("PAYEE_RULES_002");
-//      tx.setTransTimestamp(txTime.minusHours(8));
-        int result = fixedRules.checkWindow(tx);
+        tx.setTransTimestamp(LocalDateTime.ofInstant(txInstant, ZoneOffset.UTC));
 
+        int result = fixedRules.checkWindow(tx);
         assertEquals(2, result);
     }
 

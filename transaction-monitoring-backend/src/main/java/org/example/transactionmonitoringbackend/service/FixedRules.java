@@ -25,7 +25,7 @@ public class FixedRules {
 
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
-
+    @Autowired
     public FixedRules(TransactionRepository transactionRepository, UserRepository userRepository) {
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
