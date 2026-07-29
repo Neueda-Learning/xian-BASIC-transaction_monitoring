@@ -8,6 +8,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/rules")
+@CrossOrigin(origins = "*")
 public class MonitoringRuleController {
 
     private final MonitoringRuleService monitoringRuleService;

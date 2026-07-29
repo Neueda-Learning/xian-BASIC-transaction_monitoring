@@ -16,6 +16,6 @@ public class UserService {
 
     // Check whether a user exists by account id
     public boolean userExists(String accountId) {
-        return userRepository.existsByAccountId(accountId);
+        return userRepository.existsByAccountNo(accountId);
     }
 }
