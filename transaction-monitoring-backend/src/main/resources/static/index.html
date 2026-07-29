@@ -305,6 +305,12 @@ setSaveError(`Failed to update alert #${alert.id}: ${err.message}`);
         const [detailError, setDetailError] = useState('');
         const [submitMessage, setSubmitMessage] = useState('');
         const [submitError, setSubmitError] = useState('');
+        const [filterMinAmount, setFilterMinAmount] = useState('');
+        const [filterMaxAmount, setFilterMaxAmount] = useState('');
+        const [filterStartTime, setFilterStartTime] = useState('');
+        const [filterEndTime, setFilterEndTime] = useState('');
+        const [isFiltering, setIsFiltering] = useState(false);
+        const [filterError, setFilterError] = useState('');
         const [formData, setFormData] = useState({
             accountId: '',
             payeeId: '',
@@ -403,6 +409,47 @@ setSaveError(`Failed to update alert #${alert.id}: ${err.message}`);
             }
         };
 
+        const handleFilterTransactions = async () => {
+            setFilterError('');
+
+            if (!filterMinAmount || !filterMaxAmount || !filterStartTime || !filterEndTime) {
+                setFilterError('Please fill in all filter fields (min/max amount and start/end time).');
+                return;
+            }
+
+            setIsFiltering(true);
+            try {
+                const params = new URLSearchParams({
+                    minAmount: filterMinAmount,
+                    maxAmount: filterMaxAmount,
+                    startTime: filterStartTime,
+                    endTime: filterEndTime,
+                });
+
+                const response = await fetch(`${API_BASE_URL}/transactions/range-filter?${params}`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || `Filter failed with status ${response.status}`);
+                }
+
+                const data = await response.json();
+                setTransactions(data);
+            } catch (err) {
+                setFilterError(err.message);
+            } finally {
+                setIsFiltering(false);
+            }
+        };
+
+        const handleResetFilter = () => {
+            setFilterMinAmount('');
+            setFilterMaxAmount('');
+            setFilterStartTime('');
+            setFilterEndTime('');
+            setFilterError('');
+            loadTransactions();
+        };
+
         if (loading) return <div className="p-8">Loading data from backend...</div>;
 
         return (
@@ -454,6 +501,60 @@ setSaveError(`Failed to update alert #${alert.id}: ${err.message}`);
                             <div className="md:col-span-2"><strong>Description:</strong> {selectedTransaction.description || '-'}</div>
                         </div>
                     )}
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow space-y-4">
+                    <h3 className="text-xl font-semibold">Filter Transactions by Amount & Date Range</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input
+                            type="number"
+                            step="0.01"
+                            className="border rounded px-3 py-2"
+                            placeholder="Minimum Amount"
+                            value={filterMinAmount}
+                            onChange={(e) => setFilterMinAmount(e.target.value)}
+                        />
+                        <input
+                            type="number"
+                            step="0.01"
+                            className="border rounded px-3 py-2"
+                            placeholder="Maximum Amount"
+                            value={filterMaxAmount}
+                            onChange={(e) => setFilterMaxAmount(e.target.value)}
+                        />
+                        <input
+                            type="datetime-local"
+                            className="border rounded px-3 py-2"
+                            placeholder="Start Time"
+                            value={filterStartTime}
+                            onChange={(e) => setFilterStartTime(e.target.value)}
+                        />
+                        <input
+                            type="datetime-local"
+                            className="border rounded px-3 py-2"
+                            placeholder="End Time"
+                            value={filterEndTime}
+                            onChange={(e) => setFilterEndTime(e.target.value)}
+                        />
+                    </div>
+                    {filterError && <div className="text-red-600 text-sm">{filterError}</div>}
+                    <div className="flex gap-3">
+                        <button
+                            type="button"
+                            onClick={handleFilterTransactions}
+                            disabled={isFiltering}
+                            className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 disabled:bg-gray-400"
+                        >
+                            {isFiltering ? 'Filtering...' : 'Apply Filter'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleResetFilter}
+                            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                        >
+                            Reset Filter
+                        </button>
+                    </div>
                 </div>
 
                 <div className="bg-white p-6 rounded-lg shadow">

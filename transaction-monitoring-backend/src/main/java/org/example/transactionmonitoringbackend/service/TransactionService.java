@@ -7,6 +7,8 @@ import org.example.transactionmonitoringbackend.repository.TransactionRepository
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -70,5 +72,12 @@ public class TransactionService {
 
     public Transaction getTransactionById(Long id) {
         return transactionRepository.getTransactionById(id);
+    }
+
+    public List<Transaction> filterByAmountAndTimeRange(BigDecimal minAmount,
+                                                        BigDecimal maxAmount,
+                                                        LocalDateTime startTime,
+                                                        LocalDateTime endTime) {
+        return transactionRepository.filterByAmountAndTimeRange(minAmount, maxAmount, startTime, endTime);
     }
 }

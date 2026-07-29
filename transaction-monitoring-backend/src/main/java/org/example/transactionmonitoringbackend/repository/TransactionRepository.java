@@ -9,8 +9,11 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -145,5 +148,48 @@ public class TransactionRepository  {
         return transaction;
     }
 
+    public List<Transaction> filterByAmountAndTimeRange(BigDecimal minAmount,
+                                                        BigDecimal maxAmount,
+                                                        LocalDateTime startTime,
+                                                        LocalDateTime endTime) {
+        String sql = "SELECT * FROM transactions " +
+                "WHERE amount BETWEEN ? AND ? " +
+                "AND trans_timestamp BETWEEN ? AND ? " +
+                "ORDER BY trans_timestamp DESC";
+
+        return jdbcTemplate.query(
+                sql,
+                (rs, rowNum) -> mapTransactionRow(rs),
+                minAmount,
+                maxAmount,
+                Timestamp.valueOf(startTime),
+                Timestamp.valueOf(endTime)
+        );
+    }
+
+    private Transaction mapTransactionRow(ResultSet rs) throws SQLException {
+        Transaction transaction = new Transaction();
+        transaction.setId(rs.getLong("id"));
+        transaction.setAccountId(rs.getString("account_id"));
+        transaction.setPayeeId(rs.getString("payee_id"));
+        transaction.setAmount(rs.getBigDecimal("amount"));
+        transaction.setCurrency(rs.getString("currency"));
+        transaction.setTransType(rs.getString("trans_type"));
+
+        Timestamp transTimestamp = rs.getTimestamp("trans_timestamp");
+        if (transTimestamp != null) {
+            transaction.setTransTimestamp(transTimestamp.toLocalDateTime());
+        }
+
+        transaction.setDescription(rs.getString("description"));
+        transaction.setStatus(rs.getString("status"));
+
+        Timestamp createdAt = rs.getTimestamp("created_at");
+        if (createdAt != null) {
+            transaction.setCreatedAt(createdAt.toLocalDateTime());
+        }
+
+        return transaction;
+    }
 
 }
