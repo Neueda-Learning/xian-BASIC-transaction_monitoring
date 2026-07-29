@@ -2,12 +2,11 @@ package org.example.transactionmonitoringbackend.controller;
 
 import jakarta.validation.Valid;
 import org.example.transactionmonitoringbackend.entity.Transaction;
+import org.example.transactionmonitoringbackend.exception.ValidationException;
 import org.example.transactionmonitoringbackend.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -49,10 +48,10 @@ public class TransactionController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime
     ) {
         if (minAmount.compareTo(maxAmount) > 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "minAmount must be <= maxAmount");
+            throw new ValidationException("minAmount must be <= maxAmount");
         }
         if (startTime.isAfter(endTime)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "startTime must be <= endTime");
+            throw new ValidationException("startTime must be <= endTime");
         }
 
         return transactionService.filterByAmountAndTimeRange(minAmount, maxAmount, startTime, endTime);

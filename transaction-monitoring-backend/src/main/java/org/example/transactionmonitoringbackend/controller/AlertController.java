@@ -4,6 +4,7 @@ package org.example.transactionmonitoringbackend.controller;
 import org.example.transactionmonitoringbackend.entity.Alert;
 import org.example.transactionmonitoringbackend.entity.AlertSeverity;
 import org.example.transactionmonitoringbackend.entity.AlertStatus;
+import org.example.transactionmonitoringbackend.exception.AlertNotFoundException;
 import org.example.transactionmonitoringbackend.service.AlertService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,12 +30,11 @@ public class AlertController {
     //get by id
     @GetMapping("/{id}")
     public ResponseEntity<Alert> getAlertById(@PathVariable Long id) {
-       Alert alert  = alertService.getAlertById(id);
-       if (alert == null) {
-           return ResponseEntity.notFound().build();
-       }else {
-           return ResponseEntity.ok(alert);
-       }
+        Alert alert = alertService.getAlertById(id);
+        if (alert == null) {
+            throw new AlertNotFoundException("Alert not found");
+        }
+        return ResponseEntity.ok(alert);
     }
 
     //update status

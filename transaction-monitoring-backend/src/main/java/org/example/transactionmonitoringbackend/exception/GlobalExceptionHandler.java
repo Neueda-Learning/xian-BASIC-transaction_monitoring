@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiError> handleNotFound(ResourceNotFoundException e) {
+    @ExceptionHandler({AlertNotFoundException.class, TransactionNotFoundException.class})
+    public ResponseEntity<ApiError> handleNotFound(RuntimeException e) {
         ApiError error = new ApiError();
         error.setStatus(404);
         error.setError("Not Found");
@@ -19,6 +19,15 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidStatusTransitionException.class)
     public ResponseEntity<ApiError> handleInvalidStatus(InvalidStatusTransitionException e) {
+        ApiError error = new ApiError();
+        error.setStatus(400);
+        error.setError("Bad Request");
+        error.setMessage(e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<ApiError> handleValidation(ValidationException e) {
         ApiError error = new ApiError();
         error.setStatus(400);
         error.setError("Bad Request");
