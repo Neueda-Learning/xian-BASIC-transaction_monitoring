@@ -88,7 +88,9 @@ public class RulesTest {
     @Test
     void dailyLimit_boundary_then_exceed_test() {
         // test rule 4
-        LocalDateTime dbTime = LocalDateTime.of(2026, 7, 28, 15, 0, 0);
+        Instant txInstant = Instant.parse("2026-07-28T07:00:00Z");
+        Instant seedInstant = txInstant.minusSeconds(3600);
+
         // set amount 49950, which is in the scope
         jdbcTemplate.update(
                 "INSERT INTO transactions(account_id, payee_id, amount, currency, trans_type, trans_timestamp, description) VALUES (?,?,?,?,?,?,?)",
@@ -97,7 +99,7 @@ public class RulesTest {
                 new BigDecimal("49950.00"),
                 "USD",
                 "DEBIT",
-                dbTime.minusHours(1),
+                Timestamp.from(seedInstant),
                 "seed-daily-limit"
         );
 
@@ -105,10 +107,9 @@ public class RulesTest {
         tx.setAccountId("ACC_RULES_004");
         tx.setPayeeId("PAYEE_RULES_004");
         tx.setAmount(new BigDecimal("50.00"));
-        tx.setTransTimestamp(dbTime.minusHours(8)); // 对齐 FixedRules 的 UTC 处理
+        tx.setTransTimestamp(LocalDateTime.ofInstant(txInstant, ZoneOffset.UTC));
         assertEquals(0, fixedRules.dailyLimit(tx));
-        // set total amount out of scope
-        tx.setAmount(new BigDecimal("51.00"));
+        tx.setAmount(new BigDecimal("50.01"));
         assertEquals(4, fixedRules.dailyLimit(tx));
     }
 
