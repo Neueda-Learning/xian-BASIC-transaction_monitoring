@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
+//JPA (Java Persistence API) repository for Alert entity
 public interface AlertRepository extends JpaRepository<Alert, Long> {
     List<Alert> findByStatus(AlertStatus status);
 }
