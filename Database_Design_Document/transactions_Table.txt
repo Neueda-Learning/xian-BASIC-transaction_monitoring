@@ -39,3 +39,5 @@ CREATE TABLE `transactions` (
   KEY `idx_account_time` (`account_id`, `trans_timestamp`),
   KEY `idx_account_payee` (`account_id`, `payee_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+alter table transactions add column status varchar(10);
