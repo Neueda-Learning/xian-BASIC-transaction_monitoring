@@ -70,6 +70,18 @@ public class AlertServiceTest {
         assertEquals(AlertStatus.OPEN, saved.getStatus());
         assertEquals(9020L, saved.getTransactionId());
         assertEquals(4L, saved.getRuleId());
+    }
 
+    @Test
+    void updateAlertStatus_validTransition_test() {
+        Alert alert = new Alert();
+        alert.setTransactionId(9030L);
+        alert.setRuleId(1L);
+        alert.setStatus(AlertStatus.OPEN);
+        Alert saved = alertService.createAlert(alert);
+
+        Alert updated = alertService.updateAlertStatus(saved.getId(), AlertStatus.ACKNOWLEDGED);
+
+        assertEquals(AlertStatus.ACKNOWLEDGED, updated.getStatus());
     }
 }
