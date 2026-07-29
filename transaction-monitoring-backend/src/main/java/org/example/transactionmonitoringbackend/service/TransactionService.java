@@ -22,7 +22,7 @@ public class TransactionService {
         int rule2 = fixedRules.checkWindow(transaction);
         int rule3 = fixedRules.checkFirstTransactionToPayee(transaction);
         int rule4 = fixedRules.dailyLimit(transaction);
-        if(rule1==0 && rule2==0 && rule4==0 ){
+        if(rule1==0 && rule2==0 && rule3==0 && rule4==0 ){
             return transactionRepository.addTransaction(transaction);
         }
         if(rule1 == 1){
