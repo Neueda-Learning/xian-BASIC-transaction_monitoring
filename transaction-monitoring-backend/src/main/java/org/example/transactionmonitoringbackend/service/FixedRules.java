@@ -1,10 +1,9 @@
 package org.example.transactionmonitoringbackend.service;
 
-import org.example.transactionmonitoringbackend.entity.MonitoringRule;
 import org.example.transactionmonitoringbackend.entity.Transaction;
-import org.example.transactionmonitoringbackend.repository.MonitoringRuleRepository;
-import org.example.transactionmonitoringbackend.repository.UserRepository;
 import org.example.transactionmonitoringbackend.repository.TransactionRepository;
+import org.example.transactionmonitoringbackend.repository.UserRepository;
+import org.example.transactionmonitoringbackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,11 +12,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
-public class MonitoringRuleService {
+public class FixedRules {
+
     //Fixed demo thresholds from the training document.
     private static final BigDecimal FIXED_AMOUNT_THRESHOLD = new BigDecimal("10000");
     private static final BigDecimal FIXED_DAILY_LIMIT = new BigDecimal("50000");
@@ -28,40 +26,11 @@ public class MonitoringRuleService {
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
 
-    private final MonitoringRuleRepository monitoringRuleRepository;
-
-
-    public MonitoringRuleService(TransactionRepository transactionRepository,
-                                 MonitoringRuleRepository monitoringRuleRepository,
-                                 UserRepository userRepository) {
+    public FixedRules(TransactionRepository transactionRepository, UserRepository userRepository) {
         this.transactionRepository = transactionRepository;
-        this.monitoringRuleRepository = monitoringRuleRepository;
         this.userRepository = userRepository;
     }
 
-    public int addRule(MonitoringRule rule) {
-        return monitoringRuleRepository.addRule(rule);
-    }
-
-    public List<MonitoringRule> getAllRules() {
-        return monitoringRuleRepository.getAllRules();
-    }
-
-    public MonitoringRule getRuleById(Long id) {
-        return monitoringRuleRepository.getRuleById(id);
-    }
-
-    public List<MonitoringRule> getActiveRules() {
-        return monitoringRuleRepository.getActiveRules();
-    }
-
-    public int updateRule(MonitoringRule rule) {
-        return monitoringRuleRepository.updateRule(rule);
-    }
-
-    public int deleteRule(Long id) {
-        return monitoringRuleRepository.deleteRule(id);
-    }
 
     private Instant toInstantOrNow(Object transactionTime){
         if(transactionTime instanceof Instant instant){
@@ -96,25 +65,24 @@ public class MonitoringRuleService {
         );
         //4.Comparison with threshold
         if (recentCount + 1 > FIXED_VELOCITY_COUNT_THRESHOLD) {
-           System.out.println("VELOCITY_RULE");
-           return 2;
+            System.out.println("VELOCITY_RULE");
+            return 2;
         }else{
             return 0;
         }
     }
 
-
-    // rule3：Transfer to unknown account (not in table User_table)
+    //rule 3: first transaction to a payee for the same account.
     public int checkFirstTransactionToPayee(Transaction transaction) {
-        String payeeAccount = transaction.getPayeeId();
-        boolean isTrustedUser = userRepository.existsByAccountNo(payeeAccount);
-        if (!isTrustedUser) {
-            System.out.println("NEW_PAYEE_RULE");
+        String payeeId = transaction.getPayeeId();
+        boolean isKnownAccount = userRepository.existsByAccountNo(payeeId);
+        if (!isKnownAccount) {
+            System.out.println("TRANSFER TO UNKNOWN ACCOUNT");
             return 3;
         }
         return 0;
     }
-    
+
     //rule 4: UTC day bucket cumulative amount check.
     public int dailyLimit(Transaction transaction){
         Instant txTime = toInstantOrNow(transaction.getTransTimestamp());
@@ -134,35 +102,4 @@ public class MonitoringRuleService {
             return 0;
         }
     }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

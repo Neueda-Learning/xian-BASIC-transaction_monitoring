@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title> Transaction Monitoring </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18.2.0/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+    <script src="https://unpkg.com/react-is@18.2.0/umd/react-is.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+    const { useState, useEffect } = React;
+    const { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } = Recharts;
+
+    // --- 核心配置：后端 API 地址 ---
+    const API_BASE_URL = 'http://localhost:9000';
+
+    // --- 内联 SVG 图标 (替代 lucide-react 避免报错) ---
+    const Icon = ({ path, className }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d={path}></path></svg>
+    );
+    const LayoutDashboard = (props) => <Icon path="M3 3h7v9H3zm11 0h7v5h-7zm0 9h7v9h-7zM3 16h7v5H3z" {...props} />;
+    const CreditCard = (props) => <Icon path="M21 4H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM1 10h22" {...props} />;
+    const Settings = (props) => <Icon path="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" {...props} />;
+
+    // --- 1. Sidebar Component ---
+    const Sidebar = ({ activeTab, setActiveTab }) => {
+       const menuItems = [
+{ id: 'dashboard', label: 'Alert Dashboard', icon: LayoutDashboard },
+{ id: 'transactions', label: 'Transaction List', icon: CreditCard },
+];
+        return (
+            <div className="w-64 bg-gray-800 text-white flex flex-col h-screen">
+                <div className="p-6 text-2xl font-bold border-b border-gray-700">	Monitoring Center </div>
+                <nav className="flex-1 p-4 space-y-2">
+                    {menuItems.map(item => (
+                        <button key={item.id} onClick={() => setActiveTab(item.id)}
+                            className={`flex items-center w-full px-4 py-3 rounded-lg transition-colors ${activeTab === item.id ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:bg-gray-700'}`}>
+                            <item.icon className="mr-3 h-5 w-5" /> {item.label}
+                        </button>
+                    ))}
+                </nav>
+            </div>
+        );
+    };
+
+    // --- 2. 'Alert Dashboard (/api/alerts) ---
+    const AlertsDashboard = () => {
+        const [alerts, setAlerts] = useState([]);
+        const [loading, setLoading] = useState(true);
+        const [savingMap, setSavingMap] = useState({});
+        const [statusDraftMap, setStatusDraftMap] = useState({});
+        const [saveError, setSaveError] = useState('');
+
+        const ALERT_STATUSES = ['OPEN', 'ACKNOWLEDGED', 'INVESTIGATING', 'CLOSED', 'DISMISSED'];
+        const statusLabelMap = {
+            OPEN: 'OPEN',
+            ACKNOWLEDGED: 'ACKNOWLEDGED',
+            INVESTIGATING: 'INVESTIGATING',
+            CLOSED: 'CLOSED',
+            DISMISSED: 'DISMISSED',
+        };
+
+        const isValidTransition = (currentStatus, targetStatus) => {
+            if (currentStatus === targetStatus) {
+                return false;
+            }
+            switch (currentStatus) {
+                case 'OPEN':
+                    return targetStatus === 'ACKNOWLEDGED' || targetStatus === 'DISMISSED';
+                case 'ACKNOWLEDGED':
+                    return targetStatus === 'INVESTIGATING' || targetStatus === 'CLOSED' || targetStatus === 'DISMISSED';
+                case 'INVESTIGATING':
+                    return targetStatus === 'CLOSED' || targetStatus === 'DISMISSED';
+                case 'CLOSED':
+                case 'DISMISSED':
+                    return false;
+                default:
+                    return false;
+            }
+        };
+
+        const getValidTargets = (currentStatus) =>
+            ALERT_STATUSES.filter(status => isValidTransition(currentStatus, status));
+
+        const updateAlertStatus = async (alert, targetStatus) => {
+            if (!targetStatus || !isValidTransition(alert.status, targetStatus)) {
+                return;
+            }
+
+            setSaveError('');
+            setSavingMap(prev => ({ ...prev, [alert.id]: true }));
+
+            try {
+                const baseApi = `${API_BASE_URL}/api/alerts/${alert.id}`;
+                const basePlain = `${API_BASE_URL}/alerts/${alert.id}`;
+                const candidates = [
+                    { url: `${baseApi}/status`, method: 'PATCH', body: { status: targetStatus } },
+                    { url: `${baseApi}/status`, method: 'PUT', body: { status: targetStatus } },
+                    { url: `${baseApi}/status`, method: 'PATCH', body: { targetStatus } },
+                    { url: `${baseApi}/status`, method: 'PUT', body: { targetStatus } },
+                    { url: `${baseApi}/status`, method: 'PATCH', body: { newStatus: targetStatus } },
+                    { url: `${baseApi}/status`, method: 'PUT', body: { newStatus: targetStatus } },
+                    { url: `${baseApi}`, method: 'PATCH', body: { status: targetStatus } },
+                    { url: `${baseApi}`, method: 'PUT', body: { status: targetStatus } },
+                    { url: `${baseApi}/transition`, method: 'POST', body: { targetStatus } },
+                    { url: `${baseApi}/transition?targetStatus=${encodeURIComponent(targetStatus)}`, method: 'POST' },
+                    { url: `${baseApi}/status?targetStatus=${encodeURIComponent(targetStatus)}`, method: 'POST' },
+                    { url: `${baseApi}/status?status=${encodeURIComponent(targetStatus)}`, method: 'POST' },
+                    { url: `${baseApi}/status?newStatus=${encodeURIComponent(targetStatus)}`, method: 'POST' },
+                    { url: `${baseApi}/status?targetStatus=${encodeURIComponent(targetStatus)}`, method: 'PUT' },
+                    { url: `${baseApi}/status?status=${encodeURIComponent(targetStatus)}`, method: 'PUT' },
+                    { url: `${baseApi}/status?newStatus=${encodeURIComponent(targetStatus)}`, method: 'PUT' },
+                    { url: `${baseApi}/status?targetStatus=${encodeURIComponent(targetStatus)}`, method: 'PATCH' },
+                    { url: `${baseApi}/status?status=${encodeURIComponent(targetStatus)}`, method: 'PATCH' },
+                    { url: `${baseApi}/status?newStatus=${encodeURIComponent(targetStatus)}`, method: 'PATCH' },
+                    {
+                        url: `${baseApi}/status`,
+                        method: 'PUT',
+                        rawBody: targetStatus,
+                        contentType: 'text/plain',
+                    },
+                    {
+                        url: `${baseApi}/status`,
+                        method: 'PATCH',
+                        rawBody: targetStatus,
+                        contentType: 'text/plain',
+                    },
+                    { url: `${basePlain}/status`, method: 'PATCH', body: { status: targetStatus } },
+                    { url: `${basePlain}/status`, method: 'PUT', body: { status: targetStatus } },
+                    { url: `${basePlain}/status?targetStatus=${encodeURIComponent(targetStatus)}`, method: 'POST' },
+                    { url: `${basePlain}/status?newStatus=${encodeURIComponent(targetStatus)}`, method: 'POST' },
+                ];
+
+                let lastError = '';
+                let succeeded = false;
+
+                for (const candidate of candidates) {
+                    const options = {
+                        method: candidate.method,
+                        headers: {},
+                    };
+
+                    if (candidate.body) {
+                        options.headers['Content-Type'] = 'application/json';
+                        options.body = JSON.stringify(candidate.body);
+                    }
+
+                    if (candidate.rawBody !== undefined) {
+                        options.headers['Content-Type'] = candidate.contentType || 'text/plain';
+                        options.body = candidate.rawBody;
+                    }
+
+                    try {
+                        const response = await fetch(candidate.url, options);
+                        if (response.ok) {
+                            succeeded = true;
+                            break;
+                        }
+
+                        const responseText = await response.text();
+                        lastError = `${candidate.method} ${candidate.url} -> ${response.status}${responseText ? `: ${responseText}` : ''}`;
+                    } catch (requestErr) {
+                        lastError = `${candidate.method} ${candidate.url} -> ${requestErr.message}`;
+                    }
+                }
+
+                if (!succeeded) {
+                    throw new Error(lastError || 'No compatible update endpoint found');
+                }
+
+                setAlerts(prev => prev.map(item =>
+                    item.id === alert.id ? { ...item, status: targetStatus } : item
+                ));
+                setStatusDraftMap(prev => ({ ...prev, [alert.id]: '' }));
+            } catch (err) {
+            console.error('Failed to update alert status:', err);
+
+setSaveError(`Failed to update alert #${alert.id}: ${err.message}`);
+            } finally {
+                setSavingMap(prev => ({ ...prev, [alert.id]: false }));
+            }
+        };
+
+        useEffect(() => {
+            // Send real request to the backend
+            //
+            fetch(`${API_BASE_URL}/api/alerts`)
+                .then(res => res.json())
+                .then(data => {
+                    setAlerts(data);
+                    setLoading(false);
+                })
+                .catch(err => {
+                    console.error("Failed to fetch alerts, please check if the backend is running and CORS settings:", err);
+                    setLoading(false);
+                });
+        }, []);
+
+        if (loading) return <div className="p-8">Loading data from backend...</div>;
+
+        const severityData = [
+            { name: '高', value: alerts.filter(a => a.severity === 'HIGH').length },
+            { name: '中', value: alerts.filter(a => a.severity === 'MEDIUM').length },
+            { name: '低', value: alerts.filter(a => a.severity === 'LOW').length },
+        ];
+        const COLORS = ['#ef4444', '#eab308', '#3b82f6'];
+
+        return (
+            <div className="p-8 space-y-8">
+                <h2 className="text-3xl font-bold text-gray-800">Alert Dashboard</h2>
+                {saveError && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                        {saveError}
+                    </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-white p-6 rounded-lg shadow border-l-4 border-red-500">
+                        <h3 className="text-gray-500 text-sm">Unresolved Alerts</h3>
+                        <p className="text-3xl font-bold mt-2">{alerts.filter(a => a.status === 'OPEN').length}</p>
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow">
+                        <h3 className="text-xl font-semibold mb-4">Latest Alerts</h3>
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Transaction ID</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Severity</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status Transition</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {alerts.map(alert => {
+                                    const validTargets = getValidTargets(alert.status);
+                                    const selectedTarget = statusDraftMap[alert.id] || '';
+                                    const isSaving = !!savingMap[alert.id];
+                                    const canSubmit = selectedTarget && isValidTransition(alert.status, selectedTarget) && !isSaving;
+
+                                    return (
+                                        <tr key={alert.id}>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">#{alert.id}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">{alert.transaction_id}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">{alert.severity}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">{statusLabelMap[alert.status] || alert.status}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <select
+                                                        className="border border-gray-300 rounded px-2 py-1 text-sm"
+                                                        value={selectedTarget}
+                                                        disabled={isSaving || validTargets.length === 0}
+                                                        onChange={(e) => setStatusDraftMap(prev => ({ ...prev, [alert.id]: e.target.value }))}
+                                                    >
+                                                        <option value="">Select Target Status</option>
+                                                        {validTargets.map(status => (
+                                                            <option key={status} value={status}>{statusLabelMap[status] || status}</option>
+                                                        ))}
+                                                    </select>
+                                                    <button
+                                                        className={`px-3 py-1 rounded text-white text-sm ${canSubmit ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-gray-400 cursor-not-allowed'}`}
+                                                        disabled={!canSubmit}
+                                                        onClick={() => updateAlertStatus(alert, selectedTarget)}
+                                                    >
+                                                        {isSaving ? 'Saving...' : 'Update'}
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg shadow">
+                        <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                                <Pie data={severityData} cx="50%" cy="50%" outerRadius={80} dataKey="value">
+                                    {severityData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                                </Pie>
+                                <Tooltip /><Legend />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // --- 3. Transactions List (calls /transactions) ---
+    const TransactionsList = () => {
+        const [transactions, setTransactions] = useState([]);
+        const [loading, setLoading] = useState(true);
+        const [detailId, setDetailId] = useState('');
+        const [selectedTransaction, setSelectedTransaction] = useState(null);
+        const [detailLoading, setDetailLoading] = useState(false);
+        const [detailError, setDetailError] = useState('');
+        const [submitMessage, setSubmitMessage] = useState('');
+        const [submitError, setSubmitError] = useState('');
+        const [formData, setFormData] = useState({
+            accountId: '',
+            payeeId: '',
+            amount: '',
+            currency: 'USD',
+            transType: 'DEBIT',
+            transTimestamp: '',
+            description: '',
+        });
+
+        const loadTransactions = () => {
+            setLoading(true);
+            fetch(`${API_BASE_URL}/transactions`)
+                .then(res => res.json())
+                .then(data => {
+                    setTransactions(data);
+                    setLoading(false);
+                })
+                .catch(err => {
+                    console.error("Failed to fetch transactions:", err);
+                    setLoading(false);
+                });
+        };
+
+        useEffect(() => {
+            loadTransactions();
+        }, []);
+
+        const handleChange = (event) => {
+            const { name, value } = event.target;
+            setFormData(prev => ({ ...prev, [name]: value }));
+        };
+
+        const handleSubmit = async (event) => {
+            event.preventDefault();
+            setSubmitMessage('');
+            setSubmitError('');
+
+            const payload = {
+                ...formData,
+                amount: formData.amount === '' ? null : Number(formData.amount),
+                transTimestamp: formData.transTimestamp || null,
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/transactions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                const message = await response.text();
+                if (!response.ok) {
+                    throw new Error(message || 'Failed to add transaction');
+                }
+
+                setSubmitMessage(message);
+                setFormData({
+                    accountId: '',
+                    payeeId: '',
+                    amount: '',
+                    currency: 'USD',
+                    transType: 'DEBIT',
+                    transTimestamp: '',
+                    description: '',
+                });
+                loadTransactions();
+            } catch (err) {
+                setSubmitError(err.message);
+            }
+        };
+
+        const loadTransactionById = async () => {
+            setDetailError('');
+            setSelectedTransaction(null);
+
+            if (!detailId) {
+                setDetailError('Please enter a transaction ID.');
+                return;
+            }
+
+            setDetailLoading(true);
+            try {
+                const response = await fetch(`${API_BASE_URL}/transactions/${detailId}`);
+                if (!response.ok) {
+                    throw new Error(`Transaction ${detailId} not found`);
+                }
+                const data = await response.json();
+                setSelectedTransaction(data);
+            } catch (err) {
+                setDetailError(err.message);
+            } finally {
+                setDetailLoading(false);
+            }
+        };
+
+        if (loading) return <div className="p-8">Loading data from backend...</div>;
+
+        return (
+            <div className="p-8 space-y-8">
+                <h2 className="text-3xl font-bold text-gray-800">Transactions List</h2>
+                <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow space-y-4">
+                    <h3 className="text-xl font-semibold">Add Transaction</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input name="accountId" value={formData.accountId} onChange={handleChange} className="border rounded px-3 py-2" placeholder="Account ID" required />
+                        <input name="payeeId" value={formData.payeeId} onChange={handleChange} className="border rounded px-3 py-2" placeholder="Payee ID" required />
+                        <input name="amount" type="number" step="0.01" value={formData.amount} onChange={handleChange} className="border rounded px-3 py-2" placeholder="Amount" required />
+                        <input name="currency" value={formData.currency} onChange={handleChange} className="border rounded px-3 py-2" placeholder="Currency" maxLength={3} required />
+                        <input name="transType" value={formData.transType} onChange={handleChange} className="border rounded px-3 py-2" placeholder="Transaction Type" required />
+                        <input name="transTimestamp" type="datetime-local" value={formData.transTimestamp} onChange={handleChange} className="border rounded px-3 py-2" required />
+                        <textarea name="description" value={formData.description} onChange={handleChange} className="border rounded px-3 py-2 md:col-span-2" placeholder="Description" rows="3"></textarea>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded">Save Transaction</button>
+                        {submitMessage && <span className="text-green-600 text-sm">{submitMessage}</span>}
+                        {submitError && <span className="text-red-600 text-sm">{submitError}</span>}
+                    </div>
+                </form>
+
+                <div className="bg-white p-6 rounded-lg shadow space-y-4">
+                    <h3 className="text-xl font-semibold">Find Transaction By ID</h3>
+                    <div className="flex gap-3">
+                        <input
+                            type="number"
+                            className="border rounded px-3 py-2 flex-1"
+                            placeholder="Transaction ID"
+                            value={detailId}
+                            onChange={(e) => setDetailId(e.target.value)}
+                        />
+                        <button type="button" onClick={loadTransactionById} className="bg-gray-800 text-white px-4 py-2 rounded">
+                            {detailLoading ? 'Loading...' : 'Search'}
+                        </button>
+                    </div>
+                    {detailError && <div className="text-red-600 text-sm">{detailError}</div>}
+                    {selectedTransaction && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-700">
+                            <div><strong>ID:</strong> {selectedTransaction.id}</div>
+                            <div><strong>Account ID:</strong> {selectedTransaction.accountId}</div>
+                            <div><strong>Payee ID:</strong> {selectedTransaction.payeeId}</div>
+                            <div><strong>Amount:</strong> {selectedTransaction.amount}</div>
+                            <div><strong>Currency:</strong> {selectedTransaction.currency}</div>
+                            <div><strong>Type:</strong> {selectedTransaction.transType}</div>
+                            <div><strong>Timestamp:</strong> {selectedTransaction.transTimestamp}</div>
+                            <div><strong>Status:</strong> {selectedTransaction.status || '-'}</div>
+                            <div className="md:col-span-2"><strong>Description:</strong> {selectedTransaction.description || '-'}</div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Transaction ID</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Account ID</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payee ID</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Currency</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {transactions.map(tx => (
+                                <tr key={tx.id}>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">{tx.id}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">{tx.accountId}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">{tx.payeeId}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">${tx.amount}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">{tx.currency}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">{tx.transType}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">{tx.status || '-'}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        );
+    };
+
+    // --- --- 
+    const App = () => {
+        const [activeTab, setActiveTab] = useState('dashboard');
+        const renderContent = () => {
+            switch (activeTab) {
+                case 'dashboard': return <AlertsDashboard />;
+                case 'transactions': return <TransactionsList />;
+                default: return <AlertsDashboard />;
+            }
+        };
+        return (
+            <div className="flex h-screen bg-gray-100">
+                <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+                <main className="flex-1 overflow-y-auto">{renderContent()}</main>
+            </div>
+        );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+1. User_table Table:
+	This table stores trusted receiver accounts used by the stranger transfer risk rule.
+
+2. Field Design: field name, type, description, constraints/index
+
+	id, BIGINT, Trusted payee unique primary key, PK, AUTO_INCREMENT;
+	user_name, VARCHAR(32), Trusted receiver name;
+	account_no, VARCHAR(32), Receiver account number for matching transaction payee_id, UNIQUE;
+
+3. Index Description
+
+	idx_account_no(account_no): quickly check whether the payee is trusted.
+
+4. Adaptation rules
+
+	4.1 Stranger transfer rule: check whether transaction payee_id exists in User_table.account_no.
+
+5. Creation Statement
+
+CREATE TABLE `User_table` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `user_name` VARCHAR(32) DEFAULT NULL,
+  `account_no` VARCHAR(32) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_account_no` (`account_no`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
