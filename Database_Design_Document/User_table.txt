@@ -1,20 +1,26 @@
-User table
+1. User_table Table:
+	This table stores trusted receiver accounts used by the stranger transfer risk rule.
 
-Fields:
-- name: full name of the user (VARCHAR(255))
-- account_id: unique account identifier used in transactions (VARCHAR(64), NOT NULL, UNIQUE)
+2. Field Design: field name, type, description, constraints/index
 
-Purpose:
-The `users` table stores basic user information required for transaction processing.
-When a transfer is initiated, the system reads `payee_id` from the `transactions` table (this maps to `account_id` in `users`).
-The monitoring rules will query this table to verify that the payee exists before allowing or recording a transfer.
+	id, BIGINT, Trusted payee unique primary key, PK, AUTO_INCREMENT;
+	user_name, VARCHAR(32), Trusted receiver name;
+	account_no, VARCHAR(32), Receiver account number for matching transaction payee_id, UNIQUE;
 
-Implementation notes:
-- Create table SQL is provided at `transaction-monitoring-backend/src/main/resources/db/create_users_table.sql`.
-- Sample test rows are included in that SQL file for local testing (Alice/Bob/Charlie).
+3. Index Description
 
-Rule behavior (in MonitoringRuleService):
-- `checkPayeeExistence(Transaction transaction)`: reads `payeeId` from the transaction, queries the `users` table via `UserService`.
-- If the payee is missing, the rule returns a warning code and the transaction should not be persisted.
+	idx_account_no(account_no): quickly check whether the payee is trusted.
 
-English comments are present in `MonitoringRuleService` where this rule is implemented.
+4. Adaptation rules
+
+	4.1 Stranger transfer rule: check whether transaction payee_id exists in User_table.account_no.
+
+5. Creation Statement
+
+CREATE TABLE `User_table` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `user_name` VARCHAR(32) DEFAULT NULL,
+  `account_no` VARCHAR(32) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_account_no` (`account_no`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

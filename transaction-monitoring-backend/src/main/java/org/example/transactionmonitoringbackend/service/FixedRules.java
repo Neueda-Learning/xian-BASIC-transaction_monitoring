@@ -2,6 +2,7 @@ package org.example.transactionmonitoringbackend.service;
 
 import org.example.transactionmonitoringbackend.entity.Transaction;
 import org.example.transactionmonitoringbackend.repository.TransactionRepository;
+import org.example.transactionmonitoringbackend.repository.UserRepository;
 import org.example.transactionmonitoringbackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,12 +24,13 @@ public class FixedRules {
     private static final int MAX_DESCRIPTION_LENGTH = 255;
 
     private final TransactionRepository transactionRepository;
-    private final UserService userService;
+    private final UserRepository userRepository;
 
-    public FixedRules(TransactionRepository transactionRepository, UserService userService) {
+    public FixedRules(TransactionRepository transactionRepository, UserRepository userRepository) {
         this.transactionRepository = transactionRepository;
-        this.userService = userService;
+        this.userRepository = userRepository;
     }
+
 
     private Instant toInstantOrNow(Object transactionTime){
         if(transactionTime instanceof Instant instant){
@@ -72,15 +74,14 @@ public class FixedRules {
 
     //rule 3: first transaction to a payee for the same account.
     public int checkFirstTransactionToPayee(Transaction transaction) {
-        // Simple rule: if payee is not found in users table, return 3 (warning), else 0.
         String payeeId = transaction.getPayeeId();
-        if (payeeId == null || payeeId.isBlank() || !userService.userExists(payeeId)) {
-            System.out.println("PAYEE_NOT_FOUND");
+        boolean isKnownAccount = userRepository.existsByAccountNo(payeeId);
+        if (!isKnownAccount) {
+            System.out.println("TRANSFER TO UNKNOWN ACCOUNT");
             return 3;
         }
         return 0;
     }
-
 
     //rule 4: UTC day bucket cumulative amount check.
     public int dailyLimit(Transaction transaction){

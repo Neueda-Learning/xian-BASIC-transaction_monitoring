@@ -22,9 +22,9 @@ public class TransactionService {
     public int addTransaction(Transaction transaction){
         int rule1 = fixedRules.checkSingleTransaction(transaction);
         int rule2 = fixedRules.checkWindow(transaction);
-       // int rule3 = fixedRules.checkFirstTransactionToPayee(transaction);
+        int rule3 = fixedRules.checkFirstTransactionToPayee(transaction);
         int rule4 = fixedRules.dailyLimit(transaction);
-        if(rule1==0 && rule2==0  && rule4==0 ){
+        if(rule1==0 && rule2==0 && rule3==0 && rule4==0 ){
             return transactionRepository.addTransaction(transaction);
         }
         transaction.setStatus("Alert");
@@ -45,13 +45,13 @@ public class TransactionService {
             alert2.setRuleId(2L);
             alertService.createAlert(alert2);
         }
-/*        if(rule3 == 3){
+        if(rule3 == 3){
             System.out.println("rule3 alert");
             Alert alert3 = new Alert();
             alert3.setTransactionId(transactionid);
             alert3.setRuleId(3L);
             alertService.createAlert(alert3);
-        }*/
+        }
         if(rule4 == 4){
             System.out.println("rule4 alert");
             Alert alert4 = new Alert();

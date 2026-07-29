@@ -3,6 +3,7 @@ package org.example.transactionmonitoringbackend.service;
 import org.example.transactionmonitoringbackend.entity.MonitoringRule;
 import org.example.transactionmonitoringbackend.entity.Transaction;
 import org.example.transactionmonitoringbackend.repository.MonitoringRuleRepository;
+import org.example.transactionmonitoringbackend.repository.UserRepository;
 import org.example.transactionmonitoringbackend.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,13 +26,17 @@ public class MonitoringRuleService {
     private static final int MAX_DESCRIPTION_LENGTH = 255;
 
     private final TransactionRepository transactionRepository;
+    private final UserRepository userRepository;
 
     private final MonitoringRuleRepository monitoringRuleRepository;
 
 
-    public MonitoringRuleService(TransactionRepository transactionRepository, MonitoringRuleRepository monitoringRuleRepository) {
+    public MonitoringRuleService(TransactionRepository transactionRepository,
+                                 MonitoringRuleRepository monitoringRuleRepository,
+                                 UserRepository userRepository) {
         this.transactionRepository = transactionRepository;
         this.monitoringRuleRepository = monitoringRuleRepository;
+        this.userRepository = userRepository;
     }
 
     public int addRule(MonitoringRule rule) {
@@ -99,15 +104,15 @@ public class MonitoringRuleService {
     }
 
 
-    //rule 3: first transaction to a payee for the same account.
+    // rule3：Transfer to unknown account (not in table User_table)
     public int checkFirstTransactionToPayee(Transaction transaction) {
-        long count = transactionRepository.countByAccountIdAndPayeeId(transaction.getAccountId(), transaction.getPayeeId());
-        if (count == 0) {
-            System.out.println("FIRST_TRANSACTION_TO_PAYEE");
+        String payeeAccount = transaction.getPayeeId();
+        boolean isTrustedUser = userRepository.existsByAccountNo(payeeAccount);
+        if (!isTrustedUser) {
+            System.out.println("NEW_PAYEE_RULE");
             return 3;
-        } else {
-            return 0;
         }
+        return 0;
     }
     
     //rule 4: UTC day bucket cumulative amount check.
