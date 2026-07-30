@@ -22,14 +22,21 @@ import java.util.Map;
 @Service
 public class FixedRules {
 
-    // Stable internal keys for the 4 built-in rules.
+    /*
+     * Stable internal keys for built-in rules.
+     * Each enum value maps to one rule type used in code and in database rows.
+     * The number is the default rule_id used when no database row exists.
+     */
     private enum RuleType {
         AMOUNT_THRESHOLD(1L),
         VELOCITY_RULE(2L),
         NEW_PAYEE_RULE(3L),
         DAILY_LIMIT_RULE(4L);
 
-        // Legacy alert rule id fallback when DB row is missing.
+        /*
+         * Legacy fallback rule id.
+         * This keeps alert creation compatible with old data and old clients.
+         */
         private final Long defaultRuleId;
 
         RuleType(Long defaultRuleId) {
@@ -49,10 +56,12 @@ public class FixedRules {
         this.monitoringRuleRepository = monitoringRuleRepository;
     }
 
+    /*
+     * Load latest rule settings and evaluate all built-in rules.
+     * One transaction may trigger multiple rules, so this method returns a list.
+     */
     public List<Long> getTriggeredRuleIds(Transaction transaction) {
-        // Read current rule config from DB for each incoming transaction.
         Map<String, MonitoringRule> rulesByType = loadRulesByType();
-        // A transaction may trigger multiple rules at the same time.
         List<Long> triggeredRuleIds = new ArrayList<>();
 
         MonitoringRule amountRule = resolveRule(RuleType.AMOUNT_THRESHOLD, rulesByType);
@@ -78,8 +87,11 @@ public class FixedRules {
         return triggeredRuleIds;
     }
 
+    /*
+     * Compatibility API for amount threshold rule.
+     * Returns 1 when triggered, otherwise 0.
+     */
     public int checkSingleTransaction(Transaction transaction) {
-        // Keep the original return contract (1/0) used by TransactionService.
         MonitoringRule amountRule = resolveRule(RuleType.AMOUNT_THRESHOLD, loadRulesByType());
         if (Boolean.TRUE.equals(amountRule.getIsActive()) && isAmountExceeded(transaction, amountRule)) {
             return 1;
@@ -87,8 +99,12 @@ public class FixedRules {
         return 0;
     }
 
+    /*
+     * Compatibility API for velocity rule.
+     * Config is read at call time so database changes apply immediately.
+     * Returns 2 when triggered, otherwise 0.
+     */
     public int checkWindow(Transaction transaction) {
-        // Load velocity config at call time so DB changes take effect immediately.
         MonitoringRule velocityRule = resolveRule(RuleType.VELOCITY_RULE, loadRulesByType());
         if (Boolean.TRUE.equals(velocityRule.getIsActive()) && isVelocityExceeded(transaction, velocityRule)) {
             return 2;
@@ -96,8 +112,12 @@ public class FixedRules {
         return 0;
     }
 
+    /*
+     * Compatibility API for unknown payee rule.
+     * Rule switch is controlled by monitoring_rules table.
+     * Returns 3 when triggered, otherwise 0.
+     */
     public int checkFirstTransactionToPayee(Transaction transaction) {
-        // Unknown payee rule can be enabled/disabled from monitoring_rules.
         MonitoringRule newPayeeRule = resolveRule(RuleType.NEW_PAYEE_RULE, loadRulesByType());
         if (Boolean.TRUE.equals(newPayeeRule.getIsActive()) && isUnknownPayee(transaction)) {
             return 3;
@@ -105,8 +125,11 @@ public class FixedRules {
         return 0;
     }
 
+    /*
+     * Compatibility API for daily limit rule.
+     * Returns 4 when projected daily total exceeds limit, otherwise 0.
+     */
     public int dailyLimit(Transaction transaction) {
-        // Keep rule code 4 for compatibility with existing alert writes.
         MonitoringRule dailyRule = resolveRule(RuleType.DAILY_LIMIT_RULE, loadRulesByType());
         if (Boolean.TRUE.equals(dailyRule.getIsActive()) && isDailyLimitExceeded(transaction, dailyRule)) {
             return 4;
@@ -114,29 +137,32 @@ public class FixedRules {
         return 0;
     }
 
+    /*
+     * Build a map keyed by normalized rule_type using newest-first records.
+     * Invalid rows without rule_type are ignored.
+     */
     private Map<String, MonitoringRule> loadRulesByType() {
-        // Read all rows once and resolve by rule_type in memory.
         List<MonitoringRule> rules = monitoringRuleRepository.getAllRules();
         Map<String, MonitoringRule> rulesByType = new HashMap<>();
         for (MonitoringRule rule : rules) {
             if (rule.getRuleType() == null) {
-                // Ignore invalid rows without a rule key.
                 continue;
             }
             String normalizedType = normalizeRuleType(rule.getRuleType());
-            // Keep the latest row only (query is ordered by id DESC).
             rulesByType.putIfAbsent(normalizedType, rule);
         }
         return rulesByType;
     }
 
+    /*
+     * Resolve one runtime rule object from database data plus defaults.
+     * Missing rows are treated as active with safe fallback parameters.
+     */
     private MonitoringRule resolveRule(RuleType ruleType, Map<String, MonitoringRule> rulesByType) {
-        // Build an executable rule with DB values + safe defaults.
         MonitoringRule configured = rulesByType.get(ruleType.name());
         MonitoringRule resolved = new MonitoringRule();
         resolved.setRuleType(ruleType.name());
         resolved.setId(configured != null && configured.getId() != null ? configured.getId() : ruleType.defaultRuleId);
-        // If a rule record is missing, keep it enabled and use defaults as fallback.
         resolved.setIsActive(configured == null || configured.getIsActive() == null || configured.getIsActive());
 
         if (ruleType == RuleType.AMOUNT_THRESHOLD) {
@@ -158,13 +184,18 @@ public class FixedRules {
         return resolved;
     }
 
+    /*
+     * Normalize rule_type into uppercase key format for map lookup.
+     */
     private String normalizeRuleType(String ruleType) {
-        // Normalize input values like "velocity_rule" / " Velocity_Rule ".
         return ruleType.trim().toUpperCase(Locale.ROOT);
     }
 
+    /*
+     * Convert supported timestamp types into Instant.
+     * Falls back to current time when input is null or unsupported.
+     */
     private Instant toInstantOrNow(Object transactionTime) {
-        // Accept both Instant and LocalDateTime timestamps from different call paths.
         if (transactionTime instanceof Instant instant) {
             return instant;
         }
@@ -174,14 +205,18 @@ public class FixedRules {
         return Instant.now();
     }
 
+    /*
+     * Return true when transaction amount is greater than threshold.
+     */
     private boolean isAmountExceeded(Transaction transaction, MonitoringRule rule) {
-        // Null threshold falls back to defaultAmountThreshold().
         BigDecimal threshold = rule.getThresholdAmount() == null ? defaultAmountThreshold() : rule.getThresholdAmount();
         return transaction.getAmount() != null && transaction.getAmount().compareTo(threshold) > 0;
     }
 
+    /*
+     * Return true when transaction frequency in a trailing window exceeds maxCount.
+     */
     private boolean isVelocityExceeded(Transaction transaction, MonitoringRule rule) {
-        // Count historical transactions in the trailing window.
         Instant txTime = toInstantOrNow(transaction.getTransTimestamp());
         int windowMinutes = rule.getTimeWindowMinutes() == null ? defaultVelocityWindowMinutes() : rule.getTimeWindowMinutes();
         int maxCount = rule.getMaxCount() == null ? defaultVelocityMaxCount() : rule.getMaxCount();
@@ -192,14 +227,18 @@ public class FixedRules {
         return recentCount + 1 > maxCount;
     }
 
+    /*
+     * Return true when payee account is not found in trusted user accounts.
+     */
     private boolean isUnknownPayee(Transaction transaction) {
-        // Reuse trusted payee source from User_table(account_no).
         String payeeId = transaction.getPayeeId();
         return !userRepository.existsByAccountNo(payeeId);
     }
 
+    /*
+     * Return true when projected UTC-day total is above the daily limit.
+     */
     private boolean isDailyLimitExceeded(Transaction transaction, MonitoringRule rule) {
-        // Calculate projected UTC-day total including current transaction.
         Instant txTime = toInstantOrNow(transaction.getTransTimestamp());
         Instant dayStart = LocalDate.ofInstant(txTime, ZoneOffset.UTC)
                 .atStartOfDay()
@@ -215,23 +254,31 @@ public class FixedRules {
         return projectedDailyTotal.compareTo(dailyLimit) > 0;
     }
 
+    /*
+     * Default threshold for AMOUNT_THRESHOLD.
+     */
     private BigDecimal defaultAmountThreshold() {
-        // Default for AMOUNT_THRESHOLD when not configured.
         return new BigDecimal("10000");
     }
 
+    /*
+     * Default maxCount for VELOCITY_RULE.
+     */
     private int defaultVelocityMaxCount() {
-        // Default max count for VELOCITY_RULE when not configured.
         return 5;
     }
 
+    /*
+     * Default timeWindowMinutes for VELOCITY_RULE.
+     */
     private int defaultVelocityWindowMinutes() {
-        // Default time window for VELOCITY_RULE when not configured.
         return 10;
     }
 
+    /*
+     * Default daily limit amount for DAILY_LIMIT_RULE.
+     */
     private BigDecimal defaultDailyLimit() {
-        // Default daily cap for DAILY_LIMIT_RULE when not configured.
         return new BigDecimal("50000");
     }
 }

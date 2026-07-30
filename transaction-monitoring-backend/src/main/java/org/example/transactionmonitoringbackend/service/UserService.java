@@ -7,14 +7,24 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserService {
 
+    /*
+     * Service layer for user-account existence checks.
+     * This service is used by rule evaluation to validate trusted payee accounts.
+     */
     private final UserRepository userRepository;
 
+    /*
+     * Constructor injection for UserRepository.
+     */
     @Autowired
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-    // Check whether a user exists by account id
+    /*
+     * Return true when the given account id exists in user storage.
+     * Return false when no matching account is found.
+     */
     public boolean userExists(String accountId) {
         return userRepository.existsByAccountNo(accountId);
     }

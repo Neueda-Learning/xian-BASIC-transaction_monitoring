@@ -8,7 +8,11 @@ import java.util.List;
 
 @Service
 public class MonitoringRuleService {
-    // CRUD service for monitoring_rules; runtime evaluation is in FixedRules.
+    /*
+     * CRUD service for monitoring_rules table.
+     * This class manages configuration data only.
+     * Actual runtime rule evaluation is implemented in FixedRules.
+     */
     private final MonitoringRuleRepository monitoringRuleRepository;
 
 
@@ -49,7 +53,6 @@ public class MonitoringRuleService {
         return monitoringRuleRepository.getRuleHistory(limit);
     }
 }
-
 
 
 

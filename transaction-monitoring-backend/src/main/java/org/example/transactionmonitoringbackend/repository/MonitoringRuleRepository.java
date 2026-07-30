@@ -10,14 +10,21 @@ import java.util.List;
 @Repository
 public class MonitoringRuleRepository {
 
+    /*
+     * Repository for direct SQL access to monitoring_rules table.
+     * Rule data is stored as generic columns and interpreted by FixedRules.
+     */
     private final JdbcTemplate jdbcTemplate;
 
     public MonitoringRuleRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    /*
+     * Row mapper for monitoring_rules.
+     * Nullable numeric fields are preserved as null so FixedRules can apply defaults.
+     */
     private final RowMapper<MonitoringRule> ruleRowMapper = (rs, rowNum) -> {
-        // Map nullable params so service can apply fallback defaults.
         MonitoringRule rule = new MonitoringRule();
         rule.setId(rs.getLong("id"));
         rule.setRuleType(rs.getString("rule_type"));
@@ -50,8 +57,11 @@ public class MonitoringRuleRepository {
         );
     }
 
+    /*
+     * Return all rules in descending id order.
+     * FixedRules uses this ordering to select the latest row per rule_type.
+     */
     public List<MonitoringRule> getAllRules() {
-        // Desc order lets service pick the newest record per rule_type.
         String sql = """
                 SELECT id, rule_type, is_active, threshold_amount, max_count, time_window_minutes, daily_limit_amount
                 FROM monitoring_rules

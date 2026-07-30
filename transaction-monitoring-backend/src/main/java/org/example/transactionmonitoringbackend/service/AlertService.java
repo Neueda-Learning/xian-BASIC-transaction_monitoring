@@ -14,6 +14,10 @@ import java.util.List;
 @Service
 public class AlertService {
 
+    /*
+     * Service layer for alert lifecycle.
+     * Alert records are usually created after one or more rules are triggered.
+     */
     private final AlertRepository alertRepository;
     public AlertService(AlertRepository alertRepository) {
         this.alertRepository = alertRepository;
@@ -26,7 +30,9 @@ public class AlertService {
         return  alertRepository.findAll();
     }
 
-    //get By ID
+    /*
+     * Get one alert by id.
+     */
     public Alert getAlertById(Long id){
         return alertRepository.findById(id).orElse(null);
     }
@@ -61,7 +67,6 @@ public class AlertService {
         if (alert.getStatus() == null) {
             alert.setStatus(AlertStatus.OPEN);
         }
-        // severity setting
         if (severity != null) {
             alert.setSeverity(severity);
         }
@@ -124,9 +129,3 @@ public class AlertService {
         return alertRepository.findByStatus(status);
     }
 }
-
-
-//Alert alert = new Alert();
-//        alert.setTransactionId(transaction.getId());
-//        alert.setRuleId(rule.getId());
-//        alertService.createAlert(alert);
