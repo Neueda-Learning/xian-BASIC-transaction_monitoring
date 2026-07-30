@@ -36,3 +36,6 @@ INSERT INTO monitoring_rules(rule_type,is_active) VALUES ('NEW_PAYEE_RULE',1)
 
 INSERT INTO monitoring_rules(rule_type,is_active,daily_limit_amount) VALUES ('DAILY_LIMIT_RULE',1,50000.00)
   ON DUPLICATE KEY UPDATE is_active=VALUES(is_active),daily_limit_amount=VALUES(daily_limit_amount);
+
+  ALTER TABLE monitoring_rules MODIFY COLUMN rule_name VARCHAR(100) DEFAULT ' ';
+  ALTER TABLE monitoring_rules MODIFY COLUMN severity VARCHAR(100) DEFAULT 'MEDIUM';

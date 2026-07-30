@@ -56,6 +56,11 @@ public class MonitoringRuleController {
         return monitoringRuleService.getActiveRules();
     }
 
+    @GetMapping("/history")
+    public List<MonitoringRule> getRuleHistory(@RequestParam(defaultValue = "20") int limit) {
+        return monitoringRuleService.getRuleHistory(limit);
+    }
+
     @PutMapping("/{id}")
     public String updateRule(@PathVariable Long id, @RequestBody MonitoringRule rule) {
         /*

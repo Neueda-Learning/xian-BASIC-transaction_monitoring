@@ -24,6 +24,12 @@ public class TransactionRepositoryTest {
 
     Transaction tx;
 
+    /**
+     * Tests that addTransaction() successfully inserts a new transaction record
+     * into the database and returns an affected row count of 1.
+     * A Transaction object is built with known field values, saved via the
+     * repository, and the return value is asserted to equal 1.
+     */
     @Test
     void addTransaction_test() {
         tx = new Transaction();
@@ -37,6 +43,13 @@ public class TransactionRepositoryTest {
         assertEquals(1, actual);
     }
 
+    /**
+     * Tests that getAllTransactions() returns all rows currently stored in the
+     * transactions table.
+     * Two rows are inserted directly via JdbcTemplate to bypass business logic,
+     * and the list returned by the repository is asserted to have grown by
+     * exactly 2 compared to the baseline count before insertion.
+     */
     @Test
     void getAllTransactions_test() {
         List<Transaction> listBefore = repository.getAllTransactions();
@@ -54,6 +67,14 @@ public class TransactionRepositoryTest {
         assertEquals(listBefore.size() + 2, list.size());
     }
 
+    /**
+     * Tests that getTransactionById() retrieves the correct transaction when
+     * queried by its auto-generated primary key.
+     * A single row is inserted via JdbcTemplate and its generated id is fetched
+     * directly from the database. The repository method is then called with that
+     * id, and the returned Transaction is asserted to be non-null and to match
+     * all inserted field values (id, accountId, payeeId, amount, transType).
+     */
     @Test
     void getTransactionById_test() {
         jdbcTemplate.update(

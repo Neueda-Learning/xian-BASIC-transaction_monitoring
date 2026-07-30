@@ -23,6 +23,10 @@ public class RulesTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    /**
+     * Builds a base Transaction pre-populated with default test values.
+     * Each test overrides only the fields relevant to the rule under test.
+     */
     private Transaction baseTx() {
         // initial a base transaction
         Transaction tx = new Transaction();
@@ -36,9 +40,9 @@ public class RulesTest {
         return tx;
     }
 
-    /*
-     * Rule 1 test:
-     * amount above threshold should trigger code 1.
+    /**
+     * Tests Rule 1: amount exceeding 10,000 should trigger the rule and return 1.
+     * The transaction amount is set to 10,000.01 (just above the threshold).
      */
     @Test
     void checkSingleTransaction_trigger_test() {
@@ -51,9 +55,9 @@ public class RulesTest {
         assertEquals(1, result);
     }
 
-    /*
-     * Rule 2 test:
-     * insert enough transactions in the same window to trigger velocity rule.
+    /**
+     * Tests Rule 2: five or more transactions within a rolling window should return 2.
+     * Five historical rows are seeded just before the test transaction's timestamp.
      */
     @Test
     void checkWindow_trigger_test() {
@@ -82,9 +86,8 @@ public class RulesTest {
         assertEquals(2, result);
     }
 
-    /*
-     * Rule 3 test:
-     * blank or unknown payee id should trigger unknown payee rule.
+    /**
+     * Tests Rule 3: a blank or whitespace-only payee id should trigger the rule and return 3.
      */
     @Test
     void checkFirstTransactionToPayee_trigger_test() {
@@ -97,9 +100,10 @@ public class RulesTest {
         assertEquals(3, result);
     }
 
-    /*
-     * Rule 4 test:
-     * verify boundary case (equal to limit) and exceed case (> limit).
+    /**
+     * Tests Rule 4: daily total must not exceed 50,000. Verifies both boundary and exceeded cases.
+     * A seed row of 49,950 is inserted; 50.00 passes (total = 50,000, returns 0),
+     * then 50.01 triggers the rule and returns 4.
      */
     @Test
     void dailyLimit_boundary_then_exceed_test() {

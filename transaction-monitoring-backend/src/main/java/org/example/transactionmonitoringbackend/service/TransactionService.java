@@ -31,6 +31,9 @@ public class TransactionService {
      */
     @Transactional
     public int addTransaction(Transaction transaction){
+        if(transaction.getAmount().compareTo(BigDecimal.ZERO) < 0){
+            return 0;
+        }
         int rule1 = fixedRules.checkSingleTransaction(transaction);
         int rule2 = fixedRules.checkWindow(transaction);
         int rule3 = fixedRules.checkFirstTransactionToPayee(transaction);

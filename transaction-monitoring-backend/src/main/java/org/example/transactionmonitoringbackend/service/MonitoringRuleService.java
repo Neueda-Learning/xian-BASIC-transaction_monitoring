@@ -25,7 +25,7 @@ public class MonitoringRuleService {
     }
 
     public List<MonitoringRule> getAllRules() {
-        return monitoringRuleRepository.getAllRules();
+        return monitoringRuleRepository.getLatestRules();
     }
 
     public MonitoringRule getRuleById(Long id) {
@@ -37,11 +37,20 @@ public class MonitoringRuleService {
     }
 
     public int updateRule(MonitoringRule rule) {
-        return monitoringRuleRepository.updateRule(rule);
+        // Keep old rows as history by appending a new version to monitoring_rules.
+        MonitoringRule current = monitoringRuleRepository.getRuleById(rule.getId());
+        if (rule.getRuleType() == null || rule.getRuleType().isBlank()) {
+            rule.setRuleType(current.getRuleType());
+        }
+        return monitoringRuleRepository.addRule(rule);
     }
 
     public int deleteRule(Long id) {
         return monitoringRuleRepository.deleteRule(id);
+    }
+
+    public List<MonitoringRule> getRuleHistory(int limit) {
+        return monitoringRuleRepository.getRuleHistory(limit);
     }
 }
 
