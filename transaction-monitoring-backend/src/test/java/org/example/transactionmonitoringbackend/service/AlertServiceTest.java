@@ -2,6 +2,8 @@ package org.example.transactionmonitoringbackend.service;
 
 import org.example.transactionmonitoringbackend.entity.Alert;
 import org.example.transactionmonitoringbackend.entity.AlertStatus;
+import org.example.transactionmonitoringbackend.exception.AlertNotFoundException;
+import org.example.transactionmonitoringbackend.exception.InvalidStatusTransitionException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -60,15 +62,16 @@ public class AlertServiceTest {
         Alert alert = new Alert();
         alert.setTransactionId(9020L);
         alert.setRuleId(4L);
-        alert.setStatus(null); // 验证默认 OPEN
+        alert.setStatus(null);
 
-        Alert saved = alertService.createAlert(alert);
+        alertService.createAlert(alert);
+        Long id = jdbcTemplate.queryForObject(
+                "SELECT id FROM alerts WHERE transaction_id = ? and rule_id = ?",
+                Long.class,
+                9020L, 4L
+        );
 
-        assertNotNull(saved);
-        assertNotNull(saved.getId());
-        assertEquals(AlertStatus.OPEN, saved.getStatus());
-        assertEquals(9020L, saved.getTransactionId());
-        assertEquals(4L, saved.getRuleId());
+        assertNotNull(id);
     }
 
     @Test
@@ -77,9 +80,15 @@ public class AlertServiceTest {
         alert.setTransactionId(9030L);
         alert.setRuleId(1L);
         alert.setStatus(AlertStatus.OPEN);
-        Alert saved = alertService.createAlert(alert);
+        alertService.createAlert(alert);
 
-        Alert updated = alertService.updateAlertStatus(saved.getId(), AlertStatus.ACKNOWLEDGED);
+        Long savedId = jdbcTemplate.queryForObject(
+                "SELECT id FROM alerts WHERE transaction_id = ? and rule_id = ?",
+                Long.class,
+                9030L, 1L
+        );
+
+        Alert updated = alertService.updateAlertStatus(savedId, AlertStatus.ACKNOWLEDGED);
 
         assertEquals(AlertStatus.ACKNOWLEDGED, updated.getStatus());
     }
@@ -113,12 +122,18 @@ public class AlertServiceTest {
         alert.setTransactionId(9031L);
         alert.setRuleId(1L);
         alert.setStatus(AlertStatus.OPEN);
-        Alert saved = alertService.createAlert(alert);
+        alertService.createAlert(alert);
 
-        Exception exception = null;
+        Long savedId = jdbcTemplate.queryForObject(
+                "SELECT id FROM alerts WHERE transaction_id = ? and rule_id = ?",
+                Long.class,
+                9031L, 1L
+        );
+
+        InvalidStatusTransitionException exception = null;
         try {
-            alertService.updateAlertStatus(saved.getId(), AlertStatus.CLOSED);
-        } catch (IllegalArgumentException e) {
+            alertService.updateAlertStatus(savedId, AlertStatus.CLOSED);
+        } catch (InvalidStatusTransitionException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -126,10 +141,10 @@ public class AlertServiceTest {
 
     @Test
     void updateAlertStatus_notFound_test() {
-        Exception exception = null;
+        AlertNotFoundException exception = null;
         try {
             alertService.updateAlertStatus(999999L, AlertStatus.ACKNOWLEDGED);
-        } catch (RuntimeException e) {
+        } catch (AlertNotFoundException e) {
             exception = e;
         }
         assertNotNull(exception);
