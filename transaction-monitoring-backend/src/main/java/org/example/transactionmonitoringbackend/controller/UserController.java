@@ -8,14 +8,23 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/user")
 public class UserController {
 
-
+    /*
+     * Controller for user account registration endpoints.
+     * Current endpoint supports adding username + account number pairs.
+     */
     private final UserRepository userRepository;
 
-
+    /*
+     * Constructor injection for UserRepository.
+     */
     public UserController(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
+    /*
+     * Create a user-account record from request parameters.
+     * userName is the display name and accountNo is the unique account id.
+     */
     @PostMapping("/add/user")
     public String addUser(
             @RequestParam String userName,

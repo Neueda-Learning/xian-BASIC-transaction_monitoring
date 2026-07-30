@@ -11,6 +11,10 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class MonitoringRuleController {
 
+    /*
+     * REST controller for monitoring rule management.
+     * It provides basic CRUD endpoints used by admin/config pages.
+     */
     private final MonitoringRuleService monitoringRuleService;
 
     public MonitoringRuleController(MonitoringRuleService monitoringRuleService) {
@@ -19,6 +23,10 @@ public class MonitoringRuleController {
 
     @PostMapping
     public String addRule(@RequestBody MonitoringRule rule) {
+        /*
+         * Create a new rule row in monitoring_rules table.
+         * Return a simple status message for current frontend behavior.
+         */
         int result = monitoringRuleService.addRule(rule);
         if (result == 1) {
             return "add rule success";
@@ -29,6 +37,9 @@ public class MonitoringRuleController {
 
     @GetMapping
     public List<MonitoringRule> getAllRules() {
+        /*
+         * Return all rule rows ordered by repository query behavior.
+         */
         return monitoringRuleService.getAllRules();
     }
 
@@ -39,11 +50,23 @@ public class MonitoringRuleController {
 
     @GetMapping("/active")
     public List<MonitoringRule> getActiveRules() {
+        /*
+         * Return only active rules that can be used in runtime checks.
+         */
         return monitoringRuleService.getActiveRules();
+    }
+
+    @GetMapping("/history")
+    public List<MonitoringRule> getRuleHistory(@RequestParam(defaultValue = "20") int limit) {
+        return monitoringRuleService.getRuleHistory(limit);
     }
 
     @PutMapping("/{id}")
     public String updateRule(@PathVariable Long id, @RequestBody MonitoringRule rule) {
+        /*
+         * Update one rule by id.
+         * Path id is forced into request object to avoid mismatch.
+         */
         rule.setId(id);
         int result = monitoringRuleService.updateRule(rule);
         if (result == 1) {
@@ -55,6 +78,9 @@ public class MonitoringRuleController {
 
     @DeleteMapping("/{id}")
     public String deleteRule(@PathVariable Long id) {
+        /*
+         * Delete one rule by id.
+         */
         int result = monitoringRuleService.deleteRule(id);
         if (result == 1) {
             return "delete rule success";

@@ -23,8 +23,17 @@ public class TransactionService {
     @Autowired
     private AlertService alertService;
 
+    /*
+     * Apply all fixed rules before save.
+     * If no rule is triggered, save as normal transaction.
+     * If any rule is triggered, save with Alert status and create one alert per rule:
+     * 1 = amount threshold, 2 = velocity, 3 = unknown payee, 4 = daily limit.
+     */
     @Transactional
     public int addTransaction(Transaction transaction){
+        if(transaction.getAmount().compareTo(BigDecimal.ZERO) < 0){
+            return 0;
+        }
         int rule1 = fixedRules.checkSingleTransaction(transaction);
         int rule2 = fixedRules.checkWindow(transaction);
         int rule3 = fixedRules.checkFirstTransactionToPayee(transaction);
@@ -37,28 +46,24 @@ public class TransactionService {
         Long transactionid = savedTransaction.getId();
 
         if(rule1 == 1){
-            System.out.println("rule1 alert");
             Alert alert1 = new Alert();
             alert1.setTransactionId(transactionid);
             alert1.setRuleId(1L);
             alertService.createAlert(alert1, AlertSeverity.LOW);
         }
         if(rule2 == 2){
-            System.out.println("rule2 alert");
             Alert alert2 = new Alert();
             alert2.setTransactionId(transactionid);
             alert2.setRuleId(2L);
             alertService.createAlert(alert2,AlertSeverity.LOW);
         }
         if(rule3 == 3){
-            System.out.println("rule3 alert");
             Alert alert3 = new Alert();
             alert3.setTransactionId(transactionid);
             alert3.setRuleId(3L);
             alertService.createAlert(alert3,AlertSeverity.MEDIUM);
         }
         if(rule4 == 4){
-            System.out.println("rule4 alert");
             Alert alert4 = new Alert();
             alert4.setTransactionId(transactionid);
             alert4.setRuleId(4L);

@@ -14,3 +14,141 @@
 	2.3 Alert Master Table: alerts
 	2.4 Alert Status Change Table:alerts_status_history
 	2.5 Account Payees: known_payees
+
+
+3. Database Scope Confirmed by Current Project Code:
+	3.1 Database Engine: MySQL
+	3.2 Database Name: tmDb
+	3.3 Tables actively used by backend code:
+		- transactions
+		- monitoring_rules
+		- alerts
+		- User_table
+	3.4 Notes:
+		- The code uses "monitoring_rules" (not "monitor_rules").
+		- "alerts_status_history" and "known_payees" are listed in planning, but no repository/service code currently reads or writes them.
+
+4. Detailed Table Design (Current Implementation):
+	4.1 transactions
+		Purpose:
+			Store incoming transaction records and their processing status.
+		Minimum columns required by code:
+			- id BIGINT PRIMARY KEY AUTO_INCREMENT
+			- account_id VARCHAR(64) NOT NULL
+			- payee_id VARCHAR(64) NOT NULL
+			- amount DECIMAL(18,2) NOT NULL
+			- currency VARCHAR(3) NOT NULL DEFAULT 'USD'
+			- trans_type VARCHAR(20) NOT NULL
+			- trans_timestamp DATETIME NOT NULL
+			- description TEXT NULL
+			- status VARCHAR(32) NULL
+			- created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+		Access patterns in code:
+			- Insert transaction
+			- Query by id
+			- Query all
+			- Count by account_id + trans_timestamp range
+			- Sum(amount) by account_id + trans_timestamp range
+			- Count by account_id + payee_id
+			- Filter by amount range + trans_timestamp range
+
+	4.2 monitoring_rules
+		Purpose:
+			Store configurable parameters and switch status for fixed monitoring rules.
+		Minimum columns required by code:
+			- id BIGINT PRIMARY KEY AUTO_INCREMENT
+			- rule_type VARCHAR(64) NOT NULL
+			- is_active TINYINT(1) NOT NULL DEFAULT 1
+			- threshold_amount DECIMAL(18,2) NULL
+			- max_count INT NULL
+			- time_window_minutes INT NULL
+			- daily_limit_amount DECIMAL(18,2) NULL
+		Access patterns in code:
+			- Insert rule
+			- Query all rules (ORDER BY id DESC)
+			- Query by id
+			- Query active rules
+			- Update by id
+			- Delete by id
+
+	4.3 alerts
+		Purpose:
+			Store alert events generated when one or more monitoring rules are triggered.
+		Minimum columns required by code:
+			- id BIGINT PRIMARY KEY AUTO_INCREMENT
+			- transaction_id BIGINT NOT NULL
+			- rule_id BIGINT NOT NULL
+			- status VARCHAR(32) NOT NULL
+			- severity VARCHAR(16) NOT NULL
+			- created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+		Access patterns in code:
+			- Insert alert
+			- Query by id
+			- Query all
+			- Query by status
+			- Update status
+			- Update severity
+
+	4.4 User_table
+		Purpose:
+			Store known user accounts used by payee validation logic.
+		Minimum columns required by code:
+			- user_name VARCHAR(128) NOT NULL
+			- account_no VARCHAR(64) NOT NULL
+		Access patterns in code:
+			- Insert (user_name, account_no)
+			- Exists check by account_no
+
+5. Logical Relationships:
+	5.1 alerts.transaction_id -> transactions.id (logical foreign key, used by service logic)
+	5.2 alerts.rule_id -> monitoring_rules.id (logical foreign key, used by service logic)
+	5.3 transactions.payee_id vs User_table.account_no:
+		Used by rule engine to determine whether a payee is known.
+
+6. Rule and Status Dictionary:
+	6.1 monitoring_rules.rule_type (used in current code):
+		- AMOUNT_THRESHOLD
+		- VELOCITY_RULE
+		- NEW_PAYEE_RULE
+		- DAILY_LIMIT_RULE
+	6.2 alerts.status:
+		- OPEN
+		- ACKNOWLEDGED
+		- INVESTIGATING
+		- CLOSED
+		- DISMISSED
+	6.3 alerts.severity:
+		- LOW
+		- MEDIUM
+		- HIGH
+
+7. Index Design (Recommended for Current Query Patterns):
+	7.1 transactions
+		- INDEX idx_tx_account_time (account_id, trans_timestamp)
+		- INDEX idx_tx_account_payee (account_id, payee_id)
+		- INDEX idx_tx_amount_time (amount, trans_timestamp)
+	7.2 monitoring_rules
+		- INDEX idx_rule_type_id (rule_type, id)
+	7.3 alerts
+		- INDEX idx_alert_status (status)
+		- INDEX idx_alert_transaction (transaction_id)
+		- INDEX idx_alert_created_at (created_at)
+	7.4 User_table
+		- UNIQUE INDEX uk_user_account_no (account_no)
+
+8. Suggested DDL Baseline (MySQL):
+	8.1 CREATE TABLE transactions (...)
+		Use section 4.1 field list directly.
+	8.2 CREATE TABLE monitoring_rules (...)
+		Use section 4.2 field list directly.
+	8.3 CREATE TABLE alerts (...)
+		Use section 4.3 field list directly.
+	8.4 CREATE TABLE User_table (...)
+		Use section 4.4 field list directly.
+
+9. Time and Audit Notes:
+	9.1 UTC should be enforced at application boundary for trans_timestamp and created_at.
+	9.2 If full audit chain is required, add:
+		- alerts_status_history table
+		- created_by/updated_by, updated_at columns
+		- immutable change-log strategy for rule updates
