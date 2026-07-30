@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+//enable cross-origin requests from all origins
 @CrossOrigin(origins = "*")
+//map requests to /api/alerts
 @RequestMapping("/api/alerts")
 public class AlertController {
     private final AlertService alertService;
@@ -32,6 +34,7 @@ public class AlertController {
     public ResponseEntity<Alert> getAlertById(@PathVariable Long id) {
         Alert alert = alertService.getAlertById(id);
         if (alert == null) {
+            // Throw AlertNotFoundException if alert not found
             throw new AlertNotFoundException("Alert not found");
         }
         return ResponseEntity.ok(alert);
@@ -49,6 +52,7 @@ public class AlertController {
     @PutMapping("/{id}/status")
     public ResponseEntity<Alert> updateAlertStatus(
             @PathVariable Long id,
+            //
             @RequestParam AlertStatus status
     ) {
         Alert updatedAlert = alertService.updateAlertStatus(id, status);
