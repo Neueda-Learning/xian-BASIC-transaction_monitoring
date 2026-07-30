@@ -83,13 +83,13 @@ public class AlertService {
 
     //get open alert
     public List<Alert> getOpenAlerts(){
-
         return alertRepository.findByStatus(AlertStatus.OPEN);
     }
 
 
-
-
+    public List<Alert> getAlertsByStatus(AlertStatus status) {
+        return alertRepository.findByStatus(status);
+    }
 }
 
 

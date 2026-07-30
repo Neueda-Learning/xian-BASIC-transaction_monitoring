@@ -20,9 +20,12 @@ import java.util.List;
 public class AlertController {
     private final AlertService alertService;
 
+    /* assigns the passed service object to the class member variable alertService,
+     completing dependency injection for invoking service-layer business logic inside the controller*/
     public AlertController(AlertService alertService) {
         this.alertService = alertService;
     }
+
     // search all alert
     @GetMapping
     public List<Alert> getAllAlerts() {
@@ -62,6 +65,12 @@ public class AlertController {
     @GetMapping("/open")
     public List<Alert> getOpenAlerts() {
         return alertService.getOpenAlerts();
+    }
+
+    // find alerts by status
+    @GetMapping("/status")
+    public List<Alert> getAlertsByStatus(@RequestParam AlertStatus status) {
+        return alertService.getAlertsByStatus(status);
     }
 
 //    @PostMapping
