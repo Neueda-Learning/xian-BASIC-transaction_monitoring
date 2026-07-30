@@ -21,6 +21,10 @@ public class AlertServiceTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    /*
+     * Verify getAllAlert includes newly inserted records.
+     * rule_id indicates which rule generated each alert.
+     */
     @Test
     void getAllAlert_Test() {
         List<Alert> before = alertService.getAllAlert();
@@ -36,6 +40,9 @@ public class AlertServiceTest {
         assertEquals(before.size() + 2, after.size());
     }
 
+    /*
+     * Verify service can fetch a saved alert by id with expected fields.
+     */
     @Test
     void getAlertByID() {
         jdbcTemplate.update(
@@ -55,12 +62,15 @@ public class AlertServiceTest {
         assertEquals("OPEN", alert.getStatus().name());
     }
 
+    /*
+     * Verify createAlert applies default OPEN status when status is null.
+     */
     @Test
     public void createAlert_test() {
         Alert alert = new Alert();
         alert.setTransactionId(9020L);
         alert.setRuleId(4L);
-        alert.setStatus(null); // 验证默认 OPEN
+        alert.setStatus(null);
 
         Alert saved = alertService.createAlert(alert);
 
@@ -71,6 +81,9 @@ public class AlertServiceTest {
         assertEquals(4L, saved.getRuleId());
     }
 
+    /*
+     * Verify valid status transition OPEN -> ACKNOWLEDGED succeeds.
+     */
     @Test
     void updateAlertStatus_validTransition_test() {
         Alert alert = new Alert();
@@ -84,6 +97,9 @@ public class AlertServiceTest {
         assertEquals(AlertStatus.ACKNOWLEDGED, updated.getStatus());
     }
 
+    /*
+     * Verify getOpenAlerts returns only OPEN alerts.
+     */
     @Test
     void getOpenAlerts_test() {
         Alert open = new Alert();
@@ -107,6 +123,9 @@ public class AlertServiceTest {
 
     }
 
+    /*
+     * Verify invalid status transition raises an exception.
+     */
     @Test
     void updateAlertStatus_invalidTransition_test() {
         Alert alert = new Alert();
@@ -124,6 +143,9 @@ public class AlertServiceTest {
         assertNotNull(exception);
     }
 
+    /*
+     * Verify updating status for a missing alert id raises an exception.
+     */
     @Test
     void updateAlertStatus_notFound_test() {
         Exception exception = null;

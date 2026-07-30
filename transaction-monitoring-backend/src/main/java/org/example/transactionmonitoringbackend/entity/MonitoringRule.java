@@ -4,7 +4,13 @@ import java.math.BigDecimal;
 
 public class MonitoringRule {
 
-    // Minimal fields required by runtime rule evaluation.
+    /*
+     * Core fields used by rule management and rule execution.
+     * Different rule types use different parameter fields:
+     * - AMOUNT_THRESHOLD uses thresholdAmount
+     * - VELOCITY_RULE uses maxCount + timeWindowMinutes
+     * - DAILY_LIMIT_RULE uses dailyLimitAmount
+     */
     private Long id;
     private String ruleType;
     private Boolean isActive;

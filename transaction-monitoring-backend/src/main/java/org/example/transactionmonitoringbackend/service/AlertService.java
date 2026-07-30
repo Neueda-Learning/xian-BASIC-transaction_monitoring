@@ -14,6 +14,10 @@ import java.util.List;
 @Service
 public class AlertService {
 
+    /*
+     * Service layer for alert lifecycle.
+     * Alert records are usually created after one or more rules are triggered.
+     */
     private final AlertRepository alertRepository;
     public AlertService(AlertRepository alertRepository) {
         this.alertRepository = alertRepository;
@@ -24,27 +28,29 @@ public class AlertService {
         return  alertRepository.findAll();
     }
 
-    //get By ID
+    /*
+     * Get one alert by id.
+     */
     public Alert getAlertById(Long id){
         return alertRepository.findById(id).orElse(null);
     }
 
-    //create new alert
-//    public Alert createAlert(Alert alert){
-//        if (alert.getStatus() == null) {
-//            alert.setStatus(AlertStatus.OPEN);
-//        }
-//        return alertRepository.save(alert);
-//    }
+    /*
+     * Create a new alert with default LOW severity.
+     */
     public void createAlert(Alert alert){
         createAlert(alert, AlertSeverity.LOW);
     }
 
+    /*
+     * Create an alert with explicit severity.
+     * OPEN status is applied automatically when status is not provided.
+     * Severity is applied when caller passes a non-null value.
+     */
     public Alert createAlert(Alert alert, AlertSeverity severity) {
         if (alert.getStatus() == null) {
             alert.setStatus(AlertStatus.OPEN);
         }
-        // severity setting
         if (severity != null) {
             alert.setSeverity(severity);
         }
@@ -52,13 +58,10 @@ public class AlertService {
     }
 
 
-    //update alert status
-//    public Alert updateAlertStatus(Long id, AlertStatus newStatus){
-//        Alert alert = alertRepository.findById(id).orElseThrow(() ->
-//                new RuntimeException("Alert not found"));
-//        alert.setStatus(newStatus);
-//        return alertRepository.save(alert);
-//    }
+    /*
+     * Update alert status with transition validation.
+     * Invalid transitions are rejected to keep workflow state correct.
+     */
     public Alert updateAlertStatus(Long id, AlertStatus newStatus) {
         Alert alert = alertRepository.findById(id).orElseThrow(() ->
                 new AlertNotFoundException("Alert not found"));
@@ -73,7 +76,9 @@ public class AlertService {
         return alertRepository.save(alert);
     }
 
-    //update severity
+    /*
+     * Update alert severity level.
+     */
     public Alert updateAlertSeverity(Long id, AlertSeverity newSeverity) {
         Alert alert = alertRepository.findById(id)
                 .orElseThrow(() -> new AlertNotFoundException("Alert not found"));
@@ -81,7 +86,9 @@ public class AlertService {
         return alertRepository.save(alert);
     }
 
-    //get open alert
+    /*
+     * Return all OPEN alerts for monitoring queue views.
+     */
     public List<Alert> getOpenAlerts(){
 
         return alertRepository.findByStatus(AlertStatus.OPEN);
@@ -91,9 +98,3 @@ public class AlertService {
 
 
 }
-
-
-//Alert alert = new Alert();
-//        alert.setTransactionId(transaction.getId());
-//        alert.setRuleId(rule.getId());
-//        alertService.createAlert(alert);
