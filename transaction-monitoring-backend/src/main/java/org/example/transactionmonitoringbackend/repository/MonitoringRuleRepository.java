@@ -60,6 +60,20 @@ public class MonitoringRuleRepository {
         return jdbcTemplate.query(sql, ruleRowMapper);
     }
 
+    public List<MonitoringRule> getLatestRules() {
+        String sql = """
+                SELECT mr.id, mr.rule_type, mr.is_active, mr.threshold_amount, mr.max_count, mr.time_window_minutes, mr.daily_limit_amount
+                FROM monitoring_rules mr
+                INNER JOIN (
+                    SELECT rule_type, MAX(id) AS latest_id
+                    FROM monitoring_rules
+                    GROUP BY rule_type
+                ) latest ON mr.id = latest.latest_id
+                ORDER BY mr.id ASC
+                """;
+        return jdbcTemplate.query(sql, ruleRowMapper);
+    }
+
     public MonitoringRule getRuleById(Long id) {
         String sql = """
                 SELECT id, rule_type, is_active, threshold_amount, max_count, time_window_minutes, daily_limit_amount
@@ -78,22 +92,14 @@ public class MonitoringRuleRepository {
         return jdbcTemplate.query(sql, ruleRowMapper);
     }
 
-    public int updateRule(MonitoringRule rule) {
+    public List<MonitoringRule> getRuleHistory(int limit) {
         String sql = """
-                UPDATE monitoring_rules
-                SET rule_type = ?, is_active = ?, threshold_amount = ?, max_count = ?, time_window_minutes = ?, daily_limit_amount = ?
-                WHERE id = ?
+                SELECT id, rule_type, is_active, threshold_amount, max_count, time_window_minutes, daily_limit_amount
+                FROM monitoring_rules
+                ORDER BY id DESC
+                LIMIT ?
                 """;
-
-        return jdbcTemplate.update(sql,
-                rule.getRuleType(),
-                rule.getIsActive(),
-                rule.getThresholdAmount(),
-                rule.getMaxCount(),
-                rule.getTimeWindowMinutes(),
-                rule.getDailyLimitAmount(),
-                rule.getId()
-        );
+        return jdbcTemplate.query(sql, ruleRowMapper, limit);
     }
 
     public int deleteRule(Long id) {
