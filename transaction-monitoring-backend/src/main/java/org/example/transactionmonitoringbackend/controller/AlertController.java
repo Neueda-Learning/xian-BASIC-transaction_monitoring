@@ -2,7 +2,9 @@ package org.example.transactionmonitoringbackend.controller;
 
 
 import org.example.transactionmonitoringbackend.entity.Alert;
+import org.example.transactionmonitoringbackend.entity.AlertSeverity;
 import org.example.transactionmonitoringbackend.entity.AlertStatus;
+import org.example.transactionmonitoringbackend.exception.AlertNotFoundException;
 import org.example.transactionmonitoringbackend.service.AlertService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +13,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+//enable cross-origin requests from all origins
 @CrossOrigin(origins = "*")
+//map requests to /api/alerts
 @RequestMapping("/api/alerts")
 public class AlertController {
     private final AlertService alertService;
@@ -28,12 +32,12 @@ public class AlertController {
     //get by id
     @GetMapping("/{id}")
     public ResponseEntity<Alert> getAlertById(@PathVariable Long id) {
-       Alert alert  = alertService.getAlertById(id);
-       if (alert == null) {
-           return ResponseEntity.notFound().build();
-       }else {
-           return ResponseEntity.ok(alert);
-       }
+        Alert alert = alertService.getAlertById(id);
+        if (alert == null) {
+            // Throw AlertNotFoundException if alert not found
+            throw new AlertNotFoundException("Alert not found");
+        }
+        return ResponseEntity.ok(alert);
     }
 
     //update status
@@ -46,18 +50,13 @@ public class AlertController {
 //        return ResponseEntity.ok(updateALert);
 //    }
     @PutMapping("/{id}/status")
-    public  ResponseEntity<?>  updateAlertStatus(
+    public ResponseEntity<Alert> updateAlertStatus(
             @PathVariable Long id,
+            //
             @RequestParam AlertStatus status
     ) {
-        try {
-            Alert updatedAlert = alertService.updateAlertStatus(id, status);
-            return ResponseEntity.ok(updatedAlert); //200
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage()); //400
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        }
+        Alert updatedAlert = alertService.updateAlertStatus(id, status);
+        return ResponseEntity.ok(updatedAlert);
     }
     // find all open alert
     @GetMapping("/open")
@@ -65,10 +64,26 @@ public class AlertController {
         return alertService.getOpenAlerts();
     }
 
+//    @PostMapping
+//    public ResponseEntity<Alert> createAlert(@RequestBody Alert alert) {
+//        Alert saved = alertService.createAlert(alert);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+//    }
+
     @PostMapping
-    public ResponseEntity<Alert> createAlert(@RequestBody Alert alert) {
-        Alert saved = alertService.createAlert(alert);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    public ResponseEntity<Alert> createAlert(@RequestBody Alert alert,
+                                         @RequestParam(required = false) AlertSeverity severity) {
+            Alert saved = alertService.createAlert(alert, severity);
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+}
+
+    //update severity
+    @PutMapping("/{id}/severity")
+    public ResponseEntity<Alert> updateAlertSeverity(
+            @PathVariable Long id,
+            @RequestParam AlertSeverity severity) {
+        Alert updatedAlert = alertService.updateAlertSeverity(id, severity);
+        return ResponseEntity.ok(updatedAlert);
     }
 
 }

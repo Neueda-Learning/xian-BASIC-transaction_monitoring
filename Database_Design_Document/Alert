@@ -11,4 +11,18 @@ CREATE TABLE `alerts` (
 
 
 
+// add severity column to alerts table
+use tmdb;
+SELECT * FROM tmdb.transactions;
 
+-- 临时关闭安全更新模式
+SET SQL_SAFE_UPDATES = 0;
+
+-- 添加 severity 列
+ALTER TABLE alerts ADD COLUMN severity VARCHAR(255);
+
+-- 为现有记录设置默认值
+UPDATE alerts SET severity = 'LOW' WHERE severity IS NULL;
+
+-- 重新开启安全更新模式
+SET SQL_SAFE_UPDATES = 1;
