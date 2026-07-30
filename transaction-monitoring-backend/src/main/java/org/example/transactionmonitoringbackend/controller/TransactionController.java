@@ -6,10 +6,12 @@ import org.example.transactionmonitoringbackend.exception.ValidationException;
 import org.example.transactionmonitoringbackend.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.List;
 
 @RestController
@@ -21,13 +23,13 @@ public class TransactionController {
     private TransactionService transactionService;
 
     @PostMapping
-    public String addTransaction(@Valid @RequestBody Transaction transaction){
+    public ResponseEntity<Map<String, String>> addTransaction(@Valid @RequestBody Transaction transaction){
         int result = transactionService.addTransaction(transaction);
         if(result == 1){
-            return "add transaction success";
-        }else{
-            return "add transaction false";
+            return ResponseEntity.ok(Map.of("message", "add transaction success"));
         }
+
+        throw new ValidationException("add transaction failed");
     }
 
     @GetMapping
