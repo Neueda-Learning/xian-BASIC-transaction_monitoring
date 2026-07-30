@@ -20,6 +20,8 @@ public class AlertService {
     }
 
 
+    // get all alert
+    // retrieves all alerts from the database.
     public List<Alert> getAllAlert(){
         return  alertRepository.findAll();
     }
@@ -36,10 +38,25 @@ public class AlertService {
 //        }
 //        return alertRepository.save(alert);
 //    }
+
+    // Full method (accepts custom severity)
+    //createAlert(Alert alert, AlertSeverity severity) { ... }
+    //
+
+    // This overload — caller doesn't need to specify severity
+    //createAlert(Alert alert) {
+    //    createAlert(alert, AlertSeverity.LOW);  // defaults to LOW
+    //}
     public void createAlert(Alert alert){
         createAlert(alert, AlertSeverity.LOW);
     }
 
+    // Full method (accepts custom severity)
+    // Input: Alert + optional Severity
+    //  ↓ Set status = OPEN (if missing)
+    //  ↓ Set severity (if provided)
+    //  ↓ Save to DB
+    //Output: Saved Alert with ID
     public Alert createAlert(Alert alert, AlertSeverity severity) {
         if (alert.getStatus() == null) {
             alert.setStatus(AlertStatus.OPEN);
@@ -59,6 +76,12 @@ public class AlertService {
 //        alert.setStatus(newStatus);
 //        return alertRepository.save(alert);
 //    }
+
+    //Input: id + newStatus
+    //  ↓ Find alert (or throw 404)
+    //  ↓ Validate transition (or throw 400)
+    //  ↓ Update & save to DB
+    //Output: Updated Alert
     public Alert updateAlertStatus(Long id, AlertStatus newStatus) {
         Alert alert = alertRepository.findById(id).orElseThrow(() ->
                 new AlertNotFoundException("Alert not found"));
@@ -74,6 +97,11 @@ public class AlertService {
     }
 
     //update severity
+    //Input: id + newSeverity
+    //  ↓ Find alert (or throw 404)
+    //  ↓ Update severity
+    //  ↓ Save to DB
+    //Output: Updated Alert
     public Alert updateAlertSeverity(Long id, AlertSeverity newSeverity) {
         Alert alert = alertRepository.findById(id)
                 .orElseThrow(() -> new AlertNotFoundException("Alert not found"));
@@ -82,11 +110,16 @@ public class AlertService {
     }
 
     //get open alert
+    // Retrieves all alerts with status OPEN from the database.
+    //getAllAlert()     → SELECT * FROM alerts
+    //getOpenAlerts()   → SELECT * FROM alerts WHERE status = 'OPEN'
     public List<Alert> getOpenAlerts(){
         return alertRepository.findByStatus(AlertStatus.OPEN);
     }
 
-
+    // get alerts by status
+    // Retrieves all alerts with the specified status from the database.
+    //getAlertsByStatus(status) → SELECT * FROM alerts WHERE status = 'status'
     public List<Alert> getAlertsByStatus(AlertStatus status) {
         return alertRepository.findByStatus(status);
     }
