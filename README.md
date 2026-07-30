@@ -45,17 +45,6 @@ The backend exposes four groups of endpoints:
 
 Three project topics were offered:
 
-**Option A — Portfolio Manager**
-Build an application to manage a financial portfolio containing stocks, bonds, and cash. The main deliverable is a REST API for saving and retrieving portfolio records, with an optional frontend for browsing and visualizing portfolio performance.
-
-**Option B — Payment Processing System**
-Build a system that handles the full lifecycle of a payment: `CREATED → VALIDATED → SENT → COMPLETED` (or `FAILED`). The focus is on correct state transitions, idempotency, and an audit trail of every status change.
-
-**Option C — Transaction Monitoring & Alerts Dashboard** ← *our choice*
-Build a system that evaluates incoming transactions against configurable rules and generates `Alert`s for suspicious or unusual activity. Operators manage the `Alert` lifecycle from `OPEN` through to `CLOSED` or `DISMISSED`.
-
-### Why we chose Option C
-
 1. **Real-world relevance**
    Transaction monitoring is a core part of how financial institutions detect fraud and meet compliance requirements (e.g. AML — Anti-Money Laundering). Working on this topic gives us direct exposure to a problem domain that is widely used in the industry.
 

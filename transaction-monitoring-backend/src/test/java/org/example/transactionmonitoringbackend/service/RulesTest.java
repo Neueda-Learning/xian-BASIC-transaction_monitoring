@@ -23,6 +23,10 @@ public class RulesTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    /**
+     * Builds a base Transaction pre-populated with default test values.
+     * Each test overrides only the fields relevant to the rule under test.
+     */
     private Transaction baseTx() {
         // initial a base transaction
         Transaction tx = new Transaction();
@@ -36,6 +40,10 @@ public class RulesTest {
         return tx;
     }
 
+    /**
+     * Tests Rule 1: amount exceeding 10,000 should trigger the rule and return 1.
+     * The transaction amount is set to 10,000.01 (just above the threshold).
+     */
     @Test
     void checkSingleTransaction_trigger_test() {
         // test rule 1, set amount out of scope
@@ -47,6 +55,10 @@ public class RulesTest {
         assertEquals(1, result);
     }
 
+    /**
+     * Tests Rule 2: five or more transactions within a rolling window should return 2.
+     * Five historical rows are seeded just before the test transaction's timestamp.
+     */
     @Test
     void checkWindow_trigger_test() {
         Instant txInstant = Instant.parse("2026-07-28T04:00:00Z");
@@ -74,6 +86,9 @@ public class RulesTest {
         assertEquals(2, result);
     }
 
+    /**
+     * Tests Rule 3: a blank or whitespace-only payee id should trigger the rule and return 3.
+     */
     @Test
     void checkFirstTransactionToPayee_trigger_test() {
         // test rule 3, set PayeeId with blank
@@ -85,6 +100,11 @@ public class RulesTest {
         assertEquals(3, result);
     }
 
+    /**
+     * Tests Rule 4: daily total must not exceed 50,000. Verifies both boundary and exceeded cases.
+     * A seed row of 49,950 is inserted; 50.00 passes (total = 50,000, returns 0),
+     * then 50.01 triggers the rule and returns 4.
+     */
     @Test
     void dailyLimit_boundary_then_exceed_test() {
         // test rule 4
