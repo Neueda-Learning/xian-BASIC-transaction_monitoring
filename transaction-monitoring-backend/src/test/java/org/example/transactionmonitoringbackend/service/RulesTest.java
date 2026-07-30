@@ -23,10 +23,8 @@ public class RulesTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    /*
-     * Create a reusable baseline transaction object for rule unit tests.
-     */
     private Transaction baseTx() {
+        // initial a base transaction
         Transaction tx = new Transaction();
         tx.setAccountId("ACC_RULES_001");
         tx.setPayeeId("PAYEE_RULES_001");
@@ -44,8 +42,9 @@ public class RulesTest {
      */
     @Test
     void checkSingleTransaction_trigger_test() {
+        // test rule 1, set amount out of scope
         Transaction tx = baseTx();
-        tx.setAmount(new BigDecimal("10000.01"));
+        tx.setAmount(new BigDecimal("10000.01")); // > 10000
 
         int result = fixedRules.checkSingleTransaction(tx);
 
@@ -59,6 +58,7 @@ public class RulesTest {
     @Test
     void checkWindow_trigger_test() {
         Instant txInstant = Instant.parse("2026-07-28T04:00:00Z");
+        // test rule 2
         for (int i = 0; i < 5; i++) {
             Instant seedInstant = txInstant.minusSeconds(60 + i);
             jdbcTemplate.update(
@@ -88,6 +88,7 @@ public class RulesTest {
      */
     @Test
     void checkFirstTransactionToPayee_trigger_test() {
+        // test rule 3, set PayeeId with blank
         Transaction tx = baseTx();
         tx.setPayeeId("   ");
 
@@ -102,7 +103,11 @@ public class RulesTest {
      */
     @Test
     void dailyLimit_boundary_then_exceed_test() {
-        LocalDateTime dbTime = LocalDateTime.of(2026, 7, 28, 15, 0, 0);
+        // test rule 4
+        Instant txInstant = Instant.parse("2026-07-28T07:00:00Z");
+        Instant seedInstant = txInstant.minusSeconds(3600);
+
+        // set amount 49950, which is in the scope
         jdbcTemplate.update(
                 "INSERT INTO transactions(account_id, payee_id, amount, currency, trans_type, trans_timestamp, description) VALUES (?,?,?,?,?,?,?)",
                 "ACC_RULES_004",
@@ -110,7 +115,7 @@ public class RulesTest {
                 new BigDecimal("49950.00"),
                 "USD",
                 "DEBIT",
-                dbTime.minusHours(1),
+                Timestamp.from(seedInstant),
                 "seed-daily-limit"
         );
 
@@ -118,9 +123,9 @@ public class RulesTest {
         tx.setAccountId("ACC_RULES_004");
         tx.setPayeeId("PAYEE_RULES_004");
         tx.setAmount(new BigDecimal("50.00"));
-        tx.setTransTimestamp(dbTime.minusHours(8));
+        tx.setTransTimestamp(LocalDateTime.ofInstant(txInstant, ZoneOffset.UTC));
         assertEquals(0, fixedRules.dailyLimit(tx));
-        tx.setAmount(new BigDecimal("51.00"));
+        tx.setAmount(new BigDecimal("50.01"));
         assertEquals(4, fixedRules.dailyLimit(tx));
     }
 
